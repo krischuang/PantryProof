@@ -21,8 +21,23 @@ struct AddMissingIngredientToShoppingListUseCase {
 
     /// Adds `ingredient` to the shopping list at the given `quantity`/`unit`,
     /// returning the resulting item.
+    ///
+    /// **Duplicate rule:** if the ingredient is already on the list and not
+    /// yet ``ShoppingListItem/isCompleted``, that existing entry is
+    /// returned unchanged instead of adding a second row — tapping "Add to
+    /// Shopping List" from a recipe the cook has already flagged should not
+    /// create a growing pile of duplicate entries for the same trip. Once
+    /// an entry is marked completed (bought), it no longer counts as a
+    /// duplicate: the cook has used up that stock and a fresh need for the
+    /// same ingredient is a genuinely new item to buy.
     @discardableResult
     func execute(ingredient: Ingredient, quantity: Double, unit: MeasurementUnit) -> ShoppingListItem {
+        if let activeItem = shoppingListRepository.fetchAll().first(where: {
+            !$0.isCompleted && $0.ingredient.matches(ingredient)
+        }) {
+            return activeItem
+        }
+
         let item = ShoppingListItem(ingredient: ingredient, quantity: quantity, unit: unit)
         shoppingListRepository.add(item)
         return item
