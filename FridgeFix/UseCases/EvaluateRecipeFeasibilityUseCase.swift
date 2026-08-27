@@ -66,6 +66,7 @@ struct EvaluateRecipeFeasibilityUseCase {
     ///
     /// - pantry quantity >= required quantity → ``IngredientAvailability/available``
     /// - pantry quantity < required quantity → ``IngredientAvailability/insufficient``
+    /// - units differ → ``IngredientAvailability/quantityUnverified``
     ///
     /// **Deliberately no unit conversion.** Quantities are compared
     /// directly only when the pantry and recipe already use the exact same
@@ -74,13 +75,14 @@ struct EvaluateRecipeFeasibilityUseCase {
     /// converting between them reliably would require a real
     /// measurement-conversion engine — ingredient density, package
     /// rounding, and so on — which is out of scope for FridgeFix. Rather
-    /// than invent an unreliable conversion that could tell the cook the
-    /// wrong thing, FridgeFix falls back to the ingredient's mere presence
-    /// in the pantry and leaves the pantry's own quantity visible in the UI
-    /// so the cook can judge for themselves.
+    /// than invent an unreliable conversion, or silently claim the
+    /// ingredient is safely ``available``, FridgeFix reports
+    /// ``IngredientAvailability/quantityUnverified`` and leaves the
+    /// pantry's own quantity visible in the UI so the cook can judge for
+    /// themselves.
     private func availability(of pantryItem: PantryItem, comparedTo recipeIngredient: RecipeIngredient) -> IngredientAvailability {
         guard pantryItem.unit == recipeIngredient.unit else {
-            return .available
+            return .quantityUnverified
         }
         return pantryItem.quantity >= recipeIngredient.quantity ? .available : .insufficient
     }

@@ -89,10 +89,18 @@ private struct FeasibilityBanner: View {
         case .readyToCook:
             return "Everything this recipe needs is already in your pantry."
         case .canMakeWithAdjustments:
-            let names = evaluation.missingIngredients
-                .filter { $0.hasSubstitution }
-                .map(\.ingredient.name)
-            return "Use a substitute for \(names.joined(separator: ", ")) — see the ingredient list below."
+            let unresolved = evaluation.missingEssential + evaluation.missingReplaceable
+            let substitutable = unresolved.filter { $0.hasSubstitution }.map(\.ingredient.name)
+            let unverified = unresolved.filter { $0.availability == .quantityUnverified && !$0.hasSubstitution }.map(\.ingredient.name)
+
+            var sentences: [String] = []
+            if !substitutable.isEmpty {
+                sentences.append("Use a substitute for \(substitutable.joined(separator: ", ")) — see the ingredient list below.")
+            }
+            if !unverified.isEmpty {
+                sentences.append("Check the amount of \(unverified.joined(separator: ", ")) before cooking — FridgeFix couldn't compare its unit to what the recipe needs.")
+            }
+            return sentences.joined(separator: " ")
         case .blocked:
             let unresolved = evaluation.missingIngredients.filter { !$0.hasSubstitution && $0.role != .optional }
             let names = unresolved.map(\.ingredient.name)
@@ -153,6 +161,10 @@ private struct IngredientEvaluationRow: View {
             Text("Needs \(evaluatedIngredient.recipeIngredient.formattedQuantity) — not in your pantry.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        case .quantityUnverified:
+            Text("You have \(evaluatedIngredient.formattedPantryQuantity ?? "some"), but this recipe measures in \(evaluatedIngredient.recipeIngredient.unit.symbol). Check the amount before cooking.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -165,6 +177,7 @@ private struct IngredientEvaluationRow: View {
         case .available: return .green
         case .insufficient: return .orange
         case .missing: return .red
+        case .quantityUnverified: return .blue
         }
     }
 }

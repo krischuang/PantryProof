@@ -19,9 +19,10 @@ enum RecipeFeasibility: Equatable {
     /// quantity. Nothing stands between the cook and cooking.
     case readyToCook
     /// At least one essential or replaceable ingredient is missing or
-    /// insufficient, but every such ingredient has a substitute available
-    /// in the pantry (optional ingredients falling short never affect
-    /// this).
+    /// insufficient, but every such ingredient either has a substitute
+    /// available in the pantry, or its quantity simply could not be
+    /// verified against the recipe's unit (optional ingredients falling
+    /// short never affect this).
     case canMakeWithAdjustments
     /// At least one essential or replaceable ingredient is missing or
     /// insufficient *and has no available substitute*. The recipe cannot

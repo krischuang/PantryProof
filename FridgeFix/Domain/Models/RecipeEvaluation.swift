@@ -80,7 +80,7 @@ struct RecipeEvaluation {
 
     /// The single, consistent feasibility rule used everywhere FridgeFix
     /// answers "can I still make this?" — the UI, the unit tests and this
-    /// documentation all describe the same three cases:
+    /// documentation all describe the same cases:
     ///
     /// - **Essential or replaceable**, missing or insufficient, **with no
     ///   substitution available**: blocks the recipe. A replaceable
@@ -91,11 +91,21 @@ struct RecipeEvaluation {
     /// - **Essential or replaceable**, missing or insufficient, **with a
     ///   substitution available**: the recipe can still be made with
     ///   adjustments.
-    /// - **Optional**, missing or insufficient: never affects feasibility,
-    ///   by definition of what "optional" means in FridgeFix.
+    /// - **Essential or replaceable**, with a ``IngredientAvailability/quantityUnverified``
+    ///   amount: never blocks the recipe outright — the ingredient's
+    ///   *presence* is confirmed, only its quantity is in question, so
+    ///   treating it the same as a genuinely missing ingredient would be
+    ///   too harsh. But it can never result in ``RecipeFeasibility/readyToCook``
+    ///   either, since the amount on hand genuinely might be short.
+    ///   FridgeFix always downgrades this to at least
+    ///   ``RecipeFeasibility/canMakeWithAdjustments``, so the cook is asked
+    ///   to check the amount before treating the recipe as ready.
+    /// - **Optional**, missing, insufficient, or quantity-unverified: never
+    ///   affects feasibility, by definition of what "optional" means in
+    ///   FridgeFix.
     var feasibility: RecipeFeasibility {
-        let hasUnresolvedEssential = missingEssential.contains { !$0.hasSubstitution }
-        let hasUnresolvedReplaceable = missingReplaceable.contains { !$0.hasSubstitution }
+        let hasUnresolvedEssential = missingEssential.contains { $0.availability != .quantityUnverified && !$0.hasSubstitution }
+        let hasUnresolvedReplaceable = missingReplaceable.contains { $0.availability != .quantityUnverified && !$0.hasSubstitution }
         if hasUnresolvedEssential || hasUnresolvedReplaceable {
             return .blocked
         }
