@@ -41,6 +41,35 @@ final class PantryViewModelTests: XCTestCase {
         XCTAssertEqual(message, AddPantryItemError.duplicateIngredient(name: "Chicken").errorDescription)
     }
 
+    func test_pantryViewModel_addItem_exposesDuplicateItem_forGuidedRecovery() {
+        let existing = PantryItem(ingredient: Ingredient(name: "Chicken", category: .meat), quantity: 200, unit: .grams)
+        let viewModel = makeViewModel(seedItems: [existing])
+
+        viewModel.addItem(name: "Chicken", quantity: 100, unit: .grams, category: .meat)
+
+        XCTAssertEqual(viewModel.duplicateItem?.id, existing.id)
+    }
+
+    func test_pantryViewModel_updateQuantity_changesExistingItem_andClearsErrorMessage() {
+        let existing = PantryItem(ingredient: Ingredient(name: "Chicken", category: .meat), quantity: 200, unit: .grams)
+        let viewModel = makeViewModel(seedItems: [existing])
+
+        viewModel.updateQuantity(for: existing, quantity: 600, unit: .grams)
+
+        XCTAssertEqual(viewModel.items.first?.quantity, 600)
+        XCTAssertNil(viewModel.errorMessage)
+    }
+
+    func test_pantryViewModel_updateQuantity_setsErrorMessage_whenQuantityIsInvalid() {
+        let existing = PantryItem(ingredient: Ingredient(name: "Chicken", category: .meat), quantity: 200, unit: .grams)
+        let viewModel = makeViewModel(seedItems: [existing])
+
+        viewModel.updateQuantity(for: existing, quantity: -1, unit: .grams)
+
+        XCTAssertEqual(viewModel.errorMessage, AddPantryItemError.invalidQuantity.errorDescription)
+        XCTAssertEqual(viewModel.items.first?.quantity, 200)
+    }
+
     func test_pantryViewModel_removeItem_removesFromItems() {
         let target = PantryItem(ingredient: Ingredient(name: "Onion", category: .produce), quantity: 3, unit: .pieces)
         let viewModel = makeViewModel(seedItems: [target])

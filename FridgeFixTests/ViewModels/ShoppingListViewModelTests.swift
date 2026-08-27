@@ -27,6 +27,19 @@ final class ShoppingListViewModelTests: XCTestCase {
         XCTAssertNil(viewModel.errorMessage)
     }
 
+    func test_shoppingListViewModel_toggleCompletion_setsHumanReadableErrorMessage_whenItemNoLongerExists() {
+        let item = ShoppingListItem(ingredient: Ingredient(name: "Milk", category: .dairy), quantity: 1, unit: .liters)
+        let repository = InMemoryShoppingListRepository(seedItems: [item])
+        let viewModel = ShoppingListViewModel(shoppingListRepository: repository)
+        // Simulate the item having been removed elsewhere between the list
+        // rendering and the cook's tap landing.
+        repository.remove(id: item.id)
+
+        viewModel.toggleCompletion(of: item)
+
+        XCTAssertEqual(viewModel.errorMessage, ToggleShoppingListItemError.itemNotFound.errorDescription)
+    }
+
     func test_shoppingListViewModel_removeItem_removesFromItems() {
         let item = ShoppingListItem(ingredient: Ingredient(name: "Onion", category: .produce), quantity: 3, unit: .pieces)
         let viewModel = ShoppingListViewModel(shoppingListRepository: InMemoryShoppingListRepository(seedItems: [item]))

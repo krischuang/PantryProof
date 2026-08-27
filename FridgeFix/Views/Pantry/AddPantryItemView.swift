@@ -14,6 +14,10 @@ import SwiftUI
 struct AddPantryItemView: View {
     @Environment(\.dismiss) private var dismiss
     var viewModel: PantryViewModel
+    /// Called when the cook chooses to edit the existing duplicate item
+    /// instead of adding a new one. The caller is responsible for
+    /// dismissing this sheet and presenting an edit flow.
+    var onEditExisting: (PantryItem) -> Void
 
     @State private var name: String = ""
     @State private var quantityText: String = ""
@@ -46,6 +50,11 @@ struct AddPantryItemView: View {
                     Section {
                         Text(errorMessage)
                             .foregroundStyle(.red)
+                        if let duplicateItem = viewModel.duplicateItem {
+                            Button("Update Existing Quantity") {
+                                onEditExisting(duplicateItem)
+                            }
+                        }
                     }
                 }
             }
