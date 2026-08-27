@@ -23,15 +23,21 @@ final class PantryViewModel {
     /// existing item" as a concrete next action instead of leaving the
     /// cook to hunt for it themselves.
     private(set) var duplicateItem: PantryItem?
+    /// Set when ``removeItem(_:)`` fails. Kept separate from
+    /// ``errorMessage`` so a removal failure (surfaced as its own alert)
+    /// can never be confused with an add/update form's inline error.
+    var removalErrorMessage: String?
 
     private let pantryRepository: PantryRepository
     private let addPantryItemUseCase: AddPantryItemUseCase
     private let updatePantryItemUseCase: UpdatePantryItemUseCase
+    private let removePantryItemUseCase: RemovePantryItemUseCase
 
     init(pantryRepository: PantryRepository = InMemoryPantryRepository()) {
         self.pantryRepository = pantryRepository
         self.addPantryItemUseCase = AddPantryItemUseCase(pantryRepository: pantryRepository)
         self.updatePantryItemUseCase = UpdatePantryItemUseCase(pantryRepository: pantryRepository)
+        self.removePantryItemUseCase = RemovePantryItemUseCase(pantryRepository: pantryRepository)
         loadItems()
     }
 
@@ -71,8 +77,16 @@ final class PantryViewModel {
         }
     }
 
+    /// Attempts to remove a pantry item. On failure (the item was already
+    /// removed by another action), ``removalErrorMessage`` is set to the
+    /// failure's human-readable description.
     func removeItem(_ item: PantryItem) {
-        pantryRepository.remove(id: item.id)
-        loadItems()
+        removalErrorMessage = nil
+        do {
+            try removePantryItemUseCase.execute(id: item.id)
+            loadItems()
+        } catch {
+            removalErrorMessage = error.localizedDescription
+        }
     }
 }

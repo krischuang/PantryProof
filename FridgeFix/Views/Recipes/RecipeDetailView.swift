@@ -24,8 +24,11 @@ struct RecipeDetailView: View {
             Section {
                 Text(recipe.summary)
                     .foregroundStyle(.secondary)
-                if let evaluation = recipeViewModel.evaluation {
-                    FeasibilityBanner(evaluation: evaluation)
+                if let evaluation = recipeViewModel.evaluation, let guidance = recipeViewModel.feasibilityGuidance {
+                    FeasibilityBanner(feasibility: evaluation.feasibility, guidance: guidance)
+                } else if let errorMessage = recipeViewModel.errorMessage {
+                    Text(errorMessage)
+                        .foregroundStyle(.red)
                 }
             }
 
@@ -57,12 +60,19 @@ struct RecipeDetailView: View {
 /// The feasibility verdict plus one sentence of recovery guidance, so the
 /// cook always knows not just *what* FridgeFix decided but *what to do
 /// next* — the same principle applied to every error message in the app.
+///
+/// Purely a rendering of already-decided state: `feasibility` names the
+/// domain verdict and `guidance` is `RecipeViewModel`'s presentation
+/// mapping of it. This view does not filter ingredients, weigh
+/// substitutions, or otherwise re-derive what the verdict means — it only
+/// picks a colour for the verdict it was given.
 private struct FeasibilityBanner: View {
-    let evaluation: RecipeEvaluation
+    let feasibility: RecipeFeasibility
+    let guidance: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Label(evaluation.feasibility.title, systemImage: evaluation.feasibility.symbolName)
+            Label(feasibility.title, systemImage: feasibility.symbolName)
                 .font(.headline)
                 .foregroundStyle(color)
             Text(guidance)
@@ -70,33 +80,14 @@ private struct FeasibilityBanner: View {
                 .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Feasibility: \(evaluation.feasibility.title). \(guidance)")
+        .accessibilityLabel("Feasibility: \(feasibility.title). \(guidance)")
     }
 
     private var color: Color {
-        switch evaluation.feasibility {
+        switch feasibility {
         case .readyToCook: return .green
         case .canMakeWithAdjustments: return .orange
         case .blocked: return .red
-        }
-    }
-
-    /// A concrete next step, derived from the same evaluation the banner's
-    /// verdict came from — never a generic message that could disagree
-    /// with what's shown below.
-    private var guidance: String {
-        switch evaluation.feasibility {
-        case .readyToCook:
-            return "Everything this recipe needs is already in your pantry."
-        case .canMakeWithAdjustments:
-            let names = evaluation.missingIngredients
-                .filter { $0.hasSubstitution }
-                .map(\.ingredient.name)
-            return "Use a substitute for \(names.joined(separator: ", ")) — see the ingredient list below."
-        case .blocked:
-            let unresolved = evaluation.missingIngredients.filter { !$0.hasSubstitution && $0.role != .optional }
-            let names = unresolved.map(\.ingredient.name)
-            return "\(names.joined(separator: ", ")) — no substitute available. Add to your shopping list below."
         }
     }
 }
@@ -153,6 +144,10 @@ private struct IngredientEvaluationRow: View {
             Text("Needs \(evaluatedIngredient.recipeIngredient.formattedQuantity) — not in your pantry.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        case .quantityUnverified:
+            Text("You have \(evaluatedIngredient.formattedPantryQuantity ?? "some"), but this recipe measures in \(evaluatedIngredient.recipeIngredient.unit.symbol). Check the amount before cooking.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -165,6 +160,7 @@ private struct IngredientEvaluationRow: View {
         case .available: return .green
         case .insufficient: return .orange
         case .missing: return .red
+        case .quantityUnverified: return .blue
         }
     }
 }

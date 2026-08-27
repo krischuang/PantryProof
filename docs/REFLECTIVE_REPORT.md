@@ -24,8 +24,13 @@ recipe *is* adjustable. The other domain choice worth naming is quantity
 comparison: I kept the MVP's deliberate refusal to convert between units
 (grams vs. tablespoons, say). A cook can be misled by a wrong conversion
 far more easily than by an honest "I don't know, here's what you have" —
-so `EvaluateRecipeFeasibilityUseCase` falls back to presence-only checking
-and leaves the raw pantry quantity visible, rather than guessing.
+so `EvaluateRecipeFeasibilityUseCase` reports a dedicated `quantityUnverified`
+state rather than guessing, and leaves the raw pantry quantity visible so
+the cook can judge for themselves. An earlier version of this fallback
+collapsed straight to `available`, which I later corrected once I realised
+it could tell a cook an ingredient was sufficient when it had never
+actually been compared — exactly the kind of false certainty this whole
+design choice was meant to avoid.
 
 ## Architecture decisions
 

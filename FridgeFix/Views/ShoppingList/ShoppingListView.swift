@@ -53,7 +53,7 @@ struct ShoppingListView: View {
             viewModel.loadItems()
         }
         .alert(
-            "Couldn't Update Item",
+            "Couldn't Complete Action",
             isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { isPresented in

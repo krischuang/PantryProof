@@ -71,6 +71,22 @@ struct PantryView: View {
         .sheet(item: $editingItem) { item in
             UpdatePantryItemView(viewModel: viewModel, item: item)
         }
+        .alert(
+            "Couldn't Remove Item",
+            isPresented: Binding(
+                get: { viewModel.removalErrorMessage != nil },
+                set: { isPresented in
+                    if !isPresented { viewModel.removalErrorMessage = nil }
+                }
+            )
+        ) {
+            Button("OK") {
+                viewModel.removalErrorMessage = nil
+                viewModel.loadItems()
+            }
+        } message: {
+            Text(viewModel.removalErrorMessage ?? "")
+        }
     }
 
     private func removeItems(at offsets: IndexSet) {

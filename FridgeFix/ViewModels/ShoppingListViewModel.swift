@@ -23,11 +23,13 @@ final class ShoppingListViewModel {
     private let shoppingListRepository: ShoppingListRepository
     private let addMissingIngredientUseCase: AddMissingIngredientToShoppingListUseCase
     private let toggleItemUseCase: ToggleShoppingListItemUseCase
+    private let removeItemUseCase: RemoveShoppingListItemUseCase
 
     init(shoppingListRepository: ShoppingListRepository = InMemoryShoppingListRepository()) {
         self.shoppingListRepository = shoppingListRepository
         self.addMissingIngredientUseCase = AddMissingIngredientToShoppingListUseCase(shoppingListRepository: shoppingListRepository)
         self.toggleItemUseCase = ToggleShoppingListItemUseCase(shoppingListRepository: shoppingListRepository)
+        self.removeItemUseCase = RemoveShoppingListItemUseCase(shoppingListRepository: shoppingListRepository)
         loadItems()
     }
 
@@ -36,10 +38,17 @@ final class ShoppingListViewModel {
     }
 
     /// Adds a recipe ingredient the pantry couldn't cover, typically called
-    /// from the recipe detail screen.
+    /// from the recipe detail screen. On failure (an invalid required
+    /// quantity), ``errorMessage`` is set to the failure's human-readable
+    /// description.
     func addMissingIngredient(_ ingredient: Ingredient, quantity: Double, unit: MeasurementUnit) {
-        addMissingIngredientUseCase.execute(ingredient: ingredient, quantity: quantity, unit: unit)
-        loadItems()
+        errorMessage = nil
+        do {
+            try addMissingIngredientUseCase.execute(ingredient: ingredient, quantity: quantity, unit: unit)
+            loadItems()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     func toggleCompletion(of item: ShoppingListItem) {
@@ -52,8 +61,16 @@ final class ShoppingListViewModel {
         }
     }
 
+    /// Attempts to remove a shopping list item. On failure (the item was
+    /// already removed by another action), ``errorMessage`` is set to the
+    /// failure's human-readable description.
     func removeItem(_ item: ShoppingListItem) {
-        shoppingListRepository.remove(id: item.id)
-        loadItems()
+        errorMessage = nil
+        do {
+            try removeItemUseCase.execute(id: item.id)
+            loadItems()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }
