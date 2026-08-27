@@ -80,6 +80,25 @@ final class RecipeEvaluationTests: XCTestCase {
         XCTAssertEqual(evaluation.feasibility, .readyToCook)
     }
 
+    func test_feasibility_isCanMakeWithAdjustments_whenEssentialIngredientQuantityIsUnverified() {
+        let evaluation = makeEvaluation([
+            makeRow(role: .essential, availability: .quantityUnverified, hasSubstitution: false)
+        ])
+
+        // Presence is confirmed but the amount is not — never blocked, but
+        // never a bare "ready to cook" either.
+        XCTAssertEqual(evaluation.feasibility, .canMakeWithAdjustments)
+    }
+
+    func test_feasibility_ignoresOptionalIngredients_whenQuantityIsUnverified() {
+        let evaluation = makeEvaluation([
+            makeRow(role: .essential, availability: .available),
+            makeRow(role: .optional, availability: .quantityUnverified, hasSubstitution: false)
+        ])
+
+        XCTAssertEqual(evaluation.feasibility, .readyToCook)
+    }
+
     func test_feasibility_prefersBlocked_whenBothUnresolvedAndAdjustableIngredientsExist() {
         // A blocked essential ingredient must dominate the verdict even
         // when another ingredient could be adjusted for — FridgeFix never

@@ -79,18 +79,35 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
         XCTAssertNil(evaluatedChicken?.pantryQuantity)
     }
 
-    func test_evaluateRecipe_fallsBackToPresence_whenUnitsDiffer() {
+    func test_evaluateRecipe_marksQuantityUnverified_whenPantryAndRecipeUnitsDiffer() {
         let butter = makeIngredient("Butter")
         let recipe = makeRecipe(ingredients: [
             RecipeIngredient(ingredient: butter, quantity: 2, unit: .tablespoons, role: .essential)
         ])
         // Pantry holds butter by weight, not by the tablespoon — units are
-        // not directly comparable, so presence alone should count.
+        // not directly comparable, so FridgeFix must not silently claim
+        // the quantity is sufficient.
         let pantry = [PantryItem(ingredient: butter, quantity: 5, unit: .grams)]
 
         let evaluation = EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
 
-        XCTAssertEqual(evaluation.evaluatedIngredients.first?.availability, .available)
+        XCTAssertEqual(evaluation.evaluatedIngredients.first?.availability, .quantityUnverified)
+    }
+
+    func test_evaluateRecipe_doesNotReportReadyToCook_whenEssentialQuantityCannotBeVerified() {
+        let butter = makeIngredient("Butter")
+        let recipe = makeRecipe(ingredients: [
+            RecipeIngredient(ingredient: butter, quantity: 2, unit: .tablespoons, role: .essential)
+        ])
+        let pantry = [PantryItem(ingredient: butter, quantity: 500, unit: .grams)]
+
+        let evaluation = EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
+
+        // Presence is confirmed but the amount is not, so FridgeFix must
+        // never claim "ready to cook" — but it also must not block the
+        // recipe outright, since the ingredient genuinely is in the
+        // pantry.
+        XCTAssertEqual(evaluation.feasibility, .canMakeWithAdjustments)
     }
 
     // MARK: - Role-driven blocking
