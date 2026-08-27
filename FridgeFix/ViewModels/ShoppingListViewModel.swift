@@ -23,11 +23,13 @@ final class ShoppingListViewModel {
     private let shoppingListRepository: ShoppingListRepository
     private let addMissingIngredientUseCase: AddMissingIngredientToShoppingListUseCase
     private let toggleItemUseCase: ToggleShoppingListItemUseCase
+    private let removeItemUseCase: RemoveShoppingListItemUseCase
 
     init(shoppingListRepository: ShoppingListRepository = InMemoryShoppingListRepository()) {
         self.shoppingListRepository = shoppingListRepository
         self.addMissingIngredientUseCase = AddMissingIngredientToShoppingListUseCase(shoppingListRepository: shoppingListRepository)
         self.toggleItemUseCase = ToggleShoppingListItemUseCase(shoppingListRepository: shoppingListRepository)
+        self.removeItemUseCase = RemoveShoppingListItemUseCase(shoppingListRepository: shoppingListRepository)
         loadItems()
     }
 
@@ -52,8 +54,16 @@ final class ShoppingListViewModel {
         }
     }
 
+    /// Attempts to remove a shopping list item. On failure (the item was
+    /// already removed by another action), ``errorMessage`` is set to the
+    /// failure's human-readable description.
     func removeItem(_ item: ShoppingListItem) {
-        shoppingListRepository.remove(id: item.id)
-        loadItems()
+        errorMessage = nil
+        do {
+            try removeItemUseCase.execute(id: item.id)
+            loadItems()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }
