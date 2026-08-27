@@ -47,5 +47,17 @@ final class ShoppingListViewModelTests: XCTestCase {
         viewModel.removeItem(item)
 
         XCTAssertTrue(viewModel.items.isEmpty)
+        XCTAssertNil(viewModel.errorMessage)
+    }
+
+    func test_shoppingListViewModel_removeItem_setsHumanReadableErrorMessage_whenItemNoLongerExists() {
+        let item = ShoppingListItem(ingredient: Ingredient(name: "Onion", category: .produce), quantity: 3, unit: .pieces)
+        let repository = InMemoryShoppingListRepository(seedItems: [item])
+        let viewModel = ShoppingListViewModel(shoppingListRepository: repository)
+        repository.remove(id: item.id)
+
+        viewModel.removeItem(item)
+
+        XCTAssertEqual(viewModel.errorMessage, RemoveShoppingListItemError.itemNotFound.errorDescription)
     }
 }

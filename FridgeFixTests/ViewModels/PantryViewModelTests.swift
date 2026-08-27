@@ -77,5 +77,19 @@ final class PantryViewModelTests: XCTestCase {
         viewModel.removeItem(target)
 
         XCTAssertTrue(viewModel.items.isEmpty)
+        XCTAssertNil(viewModel.removalErrorMessage)
+    }
+
+    func test_pantryViewModel_removeItem_setsHumanReadableErrorMessage_whenItemNoLongerExists() {
+        let target = PantryItem(ingredient: Ingredient(name: "Onion", category: .produce), quantity: 3, unit: .pieces)
+        let repository = InMemoryPantryRepository(seedItems: [target])
+        let viewModel = PantryViewModel(pantryRepository: repository)
+        // Simulate the item having been removed elsewhere between the list
+        // rendering and the cook's swipe landing.
+        repository.remove(id: target.id)
+
+        viewModel.removeItem(target)
+
+        XCTAssertEqual(viewModel.removalErrorMessage, RemovePantryItemError.pantryItemNotFound.errorDescription)
     }
 }
