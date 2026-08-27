@@ -51,6 +51,22 @@ struct ShoppingListView: View {
         .onAppear {
             viewModel.loadItems()
         }
+        .alert(
+            "Couldn't Update Item",
+            isPresented: Binding(
+                get: { viewModel.errorMessage != nil },
+                set: { isPresented in
+                    if !isPresented { viewModel.errorMessage = nil }
+                }
+            )
+        ) {
+            Button("OK") {
+                viewModel.errorMessage = nil
+                viewModel.loadItems()
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
     }
 
     private func removeItems(at offsets: IndexSet) {
