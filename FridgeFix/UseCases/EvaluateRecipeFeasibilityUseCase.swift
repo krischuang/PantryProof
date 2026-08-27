@@ -15,6 +15,12 @@ import Foundation
 /// the use case straightforward to unit test and safe for a view model to
 /// call on demand, every time the pantry or the selected recipe changes.
 struct EvaluateRecipeFeasibilityUseCase {
+    private let substitutionProvider: SubstitutionProviding
+
+    init(substitutionProvider: SubstitutionProviding = LocalSubstitutionService()) {
+        self.substitutionProvider = substitutionProvider
+    }
+
     /// Compares every ingredient `recipe` requires against `pantry`,
     /// ingredient by ingredient, and returns the resulting evaluation.
     ///
@@ -34,16 +40,24 @@ struct EvaluateRecipeFeasibilityUseCase {
                 pantryQuantity: nil,
                 pantryUnit: nil,
                 availability: .missing,
-                substitutions: []
+                substitutions: substitutionProvider.substitutions(for: recipeIngredient.ingredient, availableIn: pantry)
             )
         }
+
+        let availability = availability(of: pantryItem, comparedTo: recipeIngredient)
+        // A substitute is only useful information once the ingredient
+        // itself falls short — looking one up for an already-available
+        // ingredient would be wasted work and dead data on every row.
+        let substitutions = availability == .available
+            ? []
+            : substitutionProvider.substitutions(for: recipeIngredient.ingredient, availableIn: pantry)
 
         return RecipeIngredientEvaluation(
             recipeIngredient: recipeIngredient,
             pantryQuantity: pantryItem.quantity,
             pantryUnit: pantryItem.unit,
-            availability: availability(of: pantryItem, comparedTo: recipeIngredient),
-            substitutions: []
+            availability: availability,
+            substitutions: substitutions
         )
     }
 
