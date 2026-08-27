@@ -10,6 +10,7 @@ import SwiftUI
 struct PantryView: View {
     var viewModel: PantryViewModel
     @State private var isPresentingAddItem = false
+    @State private var editingItem: PantryItem?
 
     var body: some View {
         Group {
@@ -22,23 +23,30 @@ struct PantryView: View {
             } else {
                 List {
                     ForEach(viewModel.items) { item in
-                        HStack {
-                            Image(systemName: item.ingredient.category.symbolName)
-                                .foregroundStyle(.tint)
-                                .accessibilityHidden(true)
-                            VStack(alignment: .leading) {
-                                Text(item.name)
-                                    .font(.body)
-                                Text(item.ingredient.category.rawValue)
-                                    .font(.caption)
+                        Button {
+                            editingItem = item
+                        } label: {
+                            HStack {
+                                Image(systemName: item.ingredient.category.symbolName)
+                                    .foregroundStyle(.tint)
+                                    .accessibilityHidden(true)
+                                VStack(alignment: .leading) {
+                                    Text(item.name)
+                                        .font(.body)
+                                        .foregroundStyle(.primary)
+                                    Text(item.ingredient.category.rawValue)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Text(item.formattedQuantity)
                                     .foregroundStyle(.secondary)
                             }
-                            Spacer()
-                            Text(item.formattedQuantity)
-                                .foregroundStyle(.secondary)
                         }
+                        .buttonStyle(.plain)
                         .accessibilityElement(children: .combine)
                         .accessibilityLabel("\(item.name), \(item.formattedQuantity)")
+                        .accessibilityHint("Double tap to update quantity")
                     }
                     .onDelete(perform: removeItems)
                 }
@@ -55,7 +63,13 @@ struct PantryView: View {
             }
         }
         .sheet(isPresented: $isPresentingAddItem) {
-            AddPantryItemView(viewModel: viewModel)
+            AddPantryItemView(viewModel: viewModel) { duplicateItem in
+                isPresentingAddItem = false
+                editingItem = duplicateItem
+            }
+        }
+        .sheet(item: $editingItem) { item in
+            UpdatePantryItemView(viewModel: viewModel, item: item)
         }
     }
 
