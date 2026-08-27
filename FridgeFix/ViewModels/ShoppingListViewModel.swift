@@ -38,10 +38,17 @@ final class ShoppingListViewModel {
     }
 
     /// Adds a recipe ingredient the pantry couldn't cover, typically called
-    /// from the recipe detail screen.
+    /// from the recipe detail screen. On failure (an invalid required
+    /// quantity), ``errorMessage`` is set to the failure's human-readable
+    /// description.
     func addMissingIngredient(_ ingredient: Ingredient, quantity: Double, unit: MeasurementUnit) {
-        addMissingIngredientUseCase.execute(ingredient: ingredient, quantity: quantity, unit: unit)
-        loadItems()
+        errorMessage = nil
+        do {
+            try addMissingIngredientUseCase.execute(ingredient: ingredient, quantity: quantity, unit: unit)
+            loadItems()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     func toggleCompletion(of item: ShoppingListItem) {

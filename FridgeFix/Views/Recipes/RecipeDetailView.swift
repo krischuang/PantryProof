@@ -26,6 +26,9 @@ struct RecipeDetailView: View {
                     .foregroundStyle(.secondary)
                 if let evaluation = recipeViewModel.evaluation {
                     FeasibilityBanner(evaluation: evaluation)
+                } else if let errorMessage = recipeViewModel.errorMessage {
+                    Text(errorMessage)
+                        .foregroundStyle(.red)
                 }
             }
 

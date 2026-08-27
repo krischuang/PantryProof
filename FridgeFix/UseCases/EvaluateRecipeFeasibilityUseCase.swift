@@ -28,7 +28,13 @@ struct EvaluateRecipeFeasibilityUseCase {
     /// name equality) rather than identifier equality, since pantry items
     /// and recipe ingredients are independently-created `Ingredient`
     /// values that refer to the same food by name.
-    func execute(recipe: Recipe, pantry: [PantryItem]) -> RecipeEvaluation {
+    ///
+    /// - Throws: ``EvaluateRecipeFeasibilityError/recipeHasNoIngredients``
+    ///   if `recipe` has no ingredient requirements to compare.
+    func execute(recipe: Recipe, pantry: [PantryItem]) throws -> RecipeEvaluation {
+        guard !recipe.ingredients.isEmpty else {
+            throw EvaluateRecipeFeasibilityError.recipeHasNoIngredients
+        }
         let evaluatedIngredients = recipe.ingredients.map { evaluate($0, against: pantry) }
         return RecipeEvaluation(recipe: recipe, evaluatedIngredients: evaluatedIngredients)
     }

@@ -30,8 +30,14 @@ struct AddMissingIngredientToShoppingListUseCase {
     /// an entry is marked completed (bought), it no longer counts as a
     /// duplicate: the cook has used up that stock and a fresh need for the
     /// same ingredient is a genuinely new item to buy.
+    ///
+    /// - Throws: ``AddMissingIngredientToShoppingListError/invalidRequiredQuantity``
+    ///   if `quantity` is zero or negative.
     @discardableResult
-    func execute(ingredient: Ingredient, quantity: Double, unit: MeasurementUnit) -> ShoppingListItem {
+    func execute(ingredient: Ingredient, quantity: Double, unit: MeasurementUnit) throws -> ShoppingListItem {
+        guard quantity > 0 else {
+            throw AddMissingIngredientToShoppingListError.invalidRequiredQuantity
+        }
         if let activeItem = shoppingListRepository.fetchAll().first(where: {
             !$0.isCompleted && $0.ingredient.matches(ingredient)
         }) {
