@@ -10,21 +10,28 @@ import Observation
 ///
 /// `PantryViewModel` does not itself decide whether a pantry entry is
 /// valid or a duplicate — it delegates that entirely to
-/// ``AddPantryItemUseCase`` and maps the outcome (a refreshed items list,
-/// or a typed ``AddPantryItemError``) into presentation state the view can
-/// render. No pantry business rule is duplicated here.
+/// ``AddPantryItemUseCase`` / ``UpdatePantryItemUseCase`` and maps the
+/// outcome (a refreshed items list, or a typed error) into presentation
+/// state the view can render. No pantry business rule is duplicated here.
 @MainActor
 @Observable
 final class PantryViewModel {
     private(set) var items: [PantryItem] = []
     var errorMessage: String?
+    /// Set when ``addItem(name:quantity:unit:category:)`` fails because the
+    /// ingredient already exists, so the view can offer "update the
+    /// existing item" as a concrete next action instead of leaving the
+    /// cook to hunt for it themselves.
+    private(set) var duplicateItem: PantryItem?
 
     private let pantryRepository: PantryRepository
     private let addPantryItemUseCase: AddPantryItemUseCase
+    private let updatePantryItemUseCase: UpdatePantryItemUseCase
 
     init(pantryRepository: PantryRepository = InMemoryPantryRepository()) {
         self.pantryRepository = pantryRepository
         self.addPantryItemUseCase = AddPantryItemUseCase(pantryRepository: pantryRepository)
+        self.updatePantryItemUseCase = UpdatePantryItemUseCase(pantryRepository: pantryRepository)
         loadItems()
     }
 
@@ -37,8 +44,27 @@ final class PantryViewModel {
     /// responsible for presenting it.
     func addItem(name: String, quantity: Double, unit: MeasurementUnit, category: IngredientCategory) {
         errorMessage = nil
+        duplicateItem = nil
         do {
             try addPantryItemUseCase.execute(name: name, quantity: quantity, unit: unit, category: category)
+            loadItems()
+        } catch let error as AddPantryItemError {
+            errorMessage = error.errorDescription
+            if case .duplicateIngredient(let existingName) = error {
+                duplicateItem = items.first { $0.name.caseInsensitiveCompare(existingName) == .orderedSame }
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Attempts to update an existing pantry item's quantity/unit. On
+    /// failure, ``errorMessage`` is set to the failure's human-readable
+    /// description.
+    func updateQuantity(for item: PantryItem, quantity: Double, unit: MeasurementUnit) {
+        errorMessage = nil
+        do {
+            try updatePantryItemUseCase.execute(id: item.id, quantity: quantity, unit: unit)
             loadItems()
         } catch {
             errorMessage = error.localizedDescription
