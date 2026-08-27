@@ -39,14 +39,22 @@ A replaceable ingredient is not automatically "safe to skip" just because
 its role says "replaceable" — it only stays out of the cook's way once a
 real substitute is confirmed to be sitting in the pantry.
 
-### Availability is three states, not two
+### Availability is four states, not two
 
 ``IngredientAvailability`` distinguishes ``IngredientAvailability/missing``
 (not in the pantry at all) from ``IngredientAvailability/insufficient``
 (in the pantry, but not enough of it). A cook with 200 g of chicken for a
 400 g requirement is in a different situation than a cook with none, and
 the recipe detail screen's "Have / Need" comparison depends on keeping
-those states apart.
+those states apart. A fourth state, ``IngredientAvailability/quantityUnverified``,
+exists for the same reason: when the pantry and recipe use different
+measurement units, FridgeFix has no reliable way to compare the two
+quantities. Rather than guess — and risk claiming an ingredient is
+``IngredientAvailability/available`` when it might not be — it reports the
+amount as unverified and shows the cook what's actually on hand so they can
+judge for themselves. An unverified essential or replaceable ingredient
+never blocks a recipe outright (its presence is confirmed), but it also
+never lets the recipe read as ready to cook (its quantity is not).
 
 ### One feasibility rule, everywhere
 

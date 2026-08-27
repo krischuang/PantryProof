@@ -15,7 +15,7 @@ crosses that layering from a human action to a human-readable answer.
 flowchart TD
     Views["SwiftUI Views\n(HomeView, PantryView, RecipeListView,\nRecipeDetailView, ShoppingListView)"]
     ViewModels["ViewModels\n(PantryViewModel, RecipeViewModel,\nShoppingListViewModel)"]
-    UseCases["Use Cases\n(EvaluateRecipeFeasibilityUseCase, AddPantryItemUseCase,\nUpdatePantryItemUseCase, AddMissingIngredientToShoppingListUseCase,\nToggleShoppingListItemUseCase)"]
+    UseCases["Use Cases\n(EvaluateRecipeFeasibilityUseCase, AddPantryItemUseCase,\nUpdatePantryItemUseCase, RemovePantryItemUseCase,\nAddMissingIngredientToShoppingListUseCase,\nToggleShoppingListItemUseCase, RemoveShoppingListItemUseCase)"]
     Domain["Domain Models / Domain Services / Repository Abstractions\n(Recipe, PantryItem, RecipeEvaluation, RecipeFeasibility …\nSubstitutionProviding · PantryRepository · ShoppingListRepository · RecipeRepository)"]
     Data["Local Data\n(InMemoryPantryRepository, InMemoryShoppingListRepository,\nInMemoryRecipeRepository, LocalSubstitutionService)"]
 

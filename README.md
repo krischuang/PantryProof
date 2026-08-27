@@ -22,7 +22,7 @@ A recipe app that only lists ingredients forces the cook to manually cross-refer
 
 - **Pantry management** — add, view, and update ingredients on hand (name, quantity, unit, category), with validation and a defined duplicate-handling rule.
 - **Recipe browsing** — sample recipes with an at-a-glance feasibility badge.
-- **Quantity-aware evaluation** — compares a recipe's requirement against the pantry by *amount*, not just presence, distinguishing **insufficient** from **missing**.
+- **Quantity-aware evaluation** — compares a recipe's requirement against the pantry by *amount*, not just presence, distinguishing **insufficient** from **missing**, and honestly flagging **unverified** when the pantry and recipe use different units FridgeFix cannot safely compare.
 - **Essential / Replaceable / Optional roles** — every recipe ingredient carries a role that changes how a shortfall is treated.
 - **Ingredient substitution** — a deterministic local lookup suggests a pantry-backed substitute where one exists.
 - **"Can I still make this?" verdict** — one consistent, contradiction-free `RecipeEvaluation` per recipe.
@@ -43,7 +43,7 @@ Local Data
 ```
 
 - **Views** render presentation state and forward user intent to a ViewModel. They contain no business rules.
-- **ViewModels** (`PantryViewModel`, `RecipeViewModel`, `ShoppingListViewModel`) hold presentation state, call Use Cases, and map results/typed errors into view-friendly values. They are `@MainActor` `@Observable` classes and contain no business rules of their own.
+- **ViewModels** (`PantryViewModel`, `RecipeViewModel`, `ShoppingListViewModel`) hold presentation state, call Use Cases, and map results/typed errors into view-friendly values — including `RecipeViewModel.feasibilityGuidance`, which turns a `RecipeEvaluation` into the recovery sentence `RecipeDetailView` renders, so the view never re-interprets the domain result itself. They are `@MainActor` `@Observable` classes and contain no business rules of their own; every significant mutation (add, update, remove, toggle) is delegated to a Use Case, never called directly against a repository.
 - **Use Cases** are the only place a business operation is orchestrated end-to-end. Each is a small, dependency-injected `struct` with a single `execute` entry point.
 - **Domain Models** (`Recipe`, `PantryItem`, `RecipeEvaluation`, …) are value types. Where a rule is pure and needs no external dependency — like the overall feasibility verdict — it lives as a computed property directly on the model, so every caller (UI, tests, docs) reads the exact same answer.
 - **Domain Protocols** (`PantryRepository`, `ShoppingListRepository`, `RecipeRepository`, `SubstitutionProviding`) abstract storage and the substitution lookup so Use Cases never depend on a concrete data source.
@@ -51,15 +51,17 @@ Local Data
 
 ## Use Cases
 
-| Use Case | Responsibility |
-| --- | --- |
-| `EvaluateRecipeFeasibilityUseCase` | The primary operation: compares a recipe against the pantry, ingredient by ingredient, producing a `RecipeEvaluation`. Pure function of its inputs — deterministic and directly unit-testable. |
-| `AddPantryItemUseCase` | Validates a new pantry entry (name, quantity) and enforces the duplicate-ingredient rule before it ever reaches storage. |
-| `UpdatePantryItemUseCase` | Updates an existing pantry item's quantity — the action `AddPantryItemError.duplicateIngredient`'s message actually points the cook toward. |
-| `AddMissingIngredientToShoppingListUseCase` | Adds a recipe ingredient to the shopping list at the recipe's own required quantity, with duplicate prevention that still allows re-adding a completed item. |
-| `ToggleShoppingListItemUseCase` | Marks a shopping list item bought/unbought, naming the "item no longer exists" failure as a typed error instead of silently no-op'ing. |
+| Use Case | Responsibility | Typed Error |
+| --- | --- | --- |
+| `EvaluateRecipeFeasibilityUseCase` | The primary operation: compares a recipe against the pantry, ingredient by ingredient, producing a `RecipeEvaluation`. Pure function of its inputs — deterministic and directly unit-testable. | `EvaluateRecipeFeasibilityError` |
+| `AddPantryItemUseCase` | Validates a new pantry entry (name, quantity) and enforces the duplicate-ingredient rule before it ever reaches storage. | `AddPantryItemError` |
+| `UpdatePantryItemUseCase` | Updates an existing pantry item's quantity — the action `AddPantryItemError.duplicateIngredient`'s message actually points the cook toward. | `AddPantryItemError` / `UpdatePantryItemError` |
+| `RemovePantryItemUseCase` | Removes a pantry item the cook has used up, naming "item no longer exists" as a typed failure instead of a silent repository call. | `RemovePantryItemError` |
+| `AddMissingIngredientToShoppingListUseCase` | Adds a recipe ingredient to the shopping list at the recipe's own required quantity, with duplicate prevention that still allows re-adding a completed item. | `AddMissingIngredientToShoppingListError` |
+| `ToggleShoppingListItemUseCase` | Marks a shopping list item bought/unbought, naming the "item no longer exists" failure as a typed error instead of silently no-op'ing. | `ToggleShoppingListItemError` |
+| `RemoveShoppingListItemUseCase` | Removes an item from the shopping list at the cook's request, naming "item no longer exists" as a typed failure. | `RemoveShoppingListItemError` |
 
-`AddPantryItemUseCase`, `EvaluateRecipeFeasibilityUseCase` and `AddMissingIngredientToShoppingListUseCase` satisfy the required three; `UpdatePantryItemUseCase` and `ToggleShoppingListItemUseCase` were added because each closes a real gap (an error message the UI couldn't otherwise act on, and a genuine not-found failure mode) — not to inflate the count.
+`AddPantryItemUseCase`, `EvaluateRecipeFeasibilityUseCase` and `AddMissingIngredientToShoppingListUseCase` satisfy the required three; every other Use Case was added because it closes a real gap — an error message the UI couldn't otherwise act on, a genuine not-found failure mode, or a mutation that would otherwise bypass the Use Case layer — not to inflate the count. Every Use Case has a typed `LocalizedError` and both happy-path and failure-path test coverage (see [Testing](#testing)).
 
 ## Business Rules
 
@@ -68,13 +70,14 @@ Local Data
 - Pantry quantity ≥ required quantity → **available**
 - Pantry quantity < required quantity, same unit → **insufficient**
 - Ingredient not in the pantry at all → **missing**
-- Pantry and recipe units differ → FridgeFix does not attempt unit conversion (out of scope, and an incorrect conversion would be worse than none). It falls back to presence alone and leaves the pantry's own quantity visible so the cook can judge for themselves.
+- Pantry and recipe units differ → **quantity unverified**. FridgeFix does not attempt unit conversion (out of scope, and an incorrect conversion would be worse than none), and it never silently reports the quantity as sufficient. It surfaces the pantry's own quantity and unit alongside a plain-language explanation ("You have 500 g, but this recipe measures in tbsp. Check the amount before cooking.") so the cook can judge for themselves.
 
 **Feasibility** (`RecipeEvaluation.feasibility`), the single rule used everywhere — UI, tests, and this document:
 
 - An **essential or replaceable** ingredient that is missing/insufficient **and has no available substitute** → the recipe is **blocked**. A replaceable ingredient the cook can neither buy nor swap out is exactly as blocking as an essential one.
 - An **essential or replaceable** ingredient that is missing/insufficient **with a substitute available** → **can make with adjustments**.
-- An **optional** ingredient that is missing/insufficient → never affects feasibility.
+- An **essential or replaceable** ingredient with an **unverified quantity** → never blocks the recipe outright (presence is confirmed), but never results in **ready to cook** either (the amount is not confirmed) — it always downgrades to **can make with adjustments**, regardless of whether a substitute exists.
+- An **optional** ingredient that is missing/insufficient/unverified → never affects feasibility.
 - If *any* ingredient meets the first condition, the recipe is blocked overall, even if another ingredient elsewhere is separately adjustable — FridgeFix never reports "can make with adjustments" while something is still genuinely blocking.
 
 **Pantry duplicates**: adding an ingredient already in the pantry is rejected outright rather than merged or duplicated, so the pantry keeps a "one row per ingredient" invariant. The error explains this and the app provides a direct path to update the existing entry instead.
@@ -87,17 +90,21 @@ Every domain error is a typed `LocalizedError` enum with a message written for t
 
 - `AddPantryItemError` — `emptyIngredientName`, `invalidQuantity`, `duplicateIngredient(name:)` (e.g. *"You already have Chicken in your pantry. Update its quantity instead of adding it again."*)
 - `UpdatePantryItemError` — `itemNotFound`
+- `RemovePantryItemError` — `pantryItemNotFound`
 - `ToggleShoppingListItemError` — `itemNotFound`
+- `RemoveShoppingListItemError` — `itemNotFound`
+- `AddMissingIngredientToShoppingListError` — `invalidRequiredQuantity` (a zero or negative required quantity is not a meaningful shopping list entry)
+- `EvaluateRecipeFeasibilityError` — `recipeHasNoIngredients` (a recipe with no ingredient requirements cannot be meaningfully evaluated)
 
-Where an error names a next action, the UI provides it directly: the duplicate-ingredient error's "update its quantity instead" is backed by a real edit flow (`UpdatePantryItemView`), reachable both by tapping a pantry row and directly from the error itself. `RecipeDetailView`'s feasibility banner carries one sentence of concrete guidance derived from the same evaluation shown below it, so the guidance can never contradict the ingredient list.
+Where an error names a next action, the UI provides it directly: the duplicate-ingredient error's "update its quantity instead" is backed by a real edit flow (`UpdatePantryItemView`), reachable both by tapping a pantry row and directly from the error itself. `RecipeDetailView`'s feasibility banner carries one sentence of concrete guidance sourced from `RecipeViewModel.feasibilityGuidance`, mapped from the same evaluation shown below it, so the guidance can never contradict the ingredient list. The same principle covers quantity uncertainty: an ingredient FridgeFix cannot verify never gets a raw "unit mismatch" message — it gets the pantry's own quantity plus a concrete next step ("check the amount before cooking").
 
 ## Testing
 
-45 tests across three areas, all passing via `xcodebuild test`:
+59 tests across three areas, all passing via `xcodebuild test`:
 
-- **`FridgeFixTests/UseCases/`** — `EvaluateRecipeFeasibilityUseCaseTests` (12), `AddPantryItemUseCaseTests` (6), `UpdatePantryItemUseCaseTests` (3), `AddMissingIngredientToShoppingListUseCaseTests` (4), `ToggleShoppingListItemUseCaseTests` (3).
-- **`FridgeFixTests/Domain/`** — `RecipeEvaluationTests` (6), exercising the feasibility rule directly against hand-built rows, independent of pantry-matching.
-- **`FridgeFixTests/ViewModels/`** — `PantryViewModelTests` (7), `ShoppingListViewModelTests` (4), verifying view models correctly surface use case results/errors and never duplicate business logic.
+- **`FridgeFixTests/UseCases/`** — `EvaluateRecipeFeasibilityUseCaseTests` (14), `AddPantryItemUseCaseTests` (6), `UpdatePantryItemUseCaseTests` (3), `RemovePantryItemUseCaseTests` (2), `AddMissingIngredientToShoppingListUseCaseTests` (6), `ToggleShoppingListItemUseCaseTests` (3), `RemoveShoppingListItemUseCaseTests` (2).
+- **`FridgeFixTests/Domain/`** — `RecipeEvaluationTests` (8), exercising the feasibility rule directly against hand-built rows — including the quantity-unverified rule — independent of pantry-matching.
+- **`FridgeFixTests/ViewModels/`** — `PantryViewModelTests` (8), `ShoppingListViewModelTests` (5), `RecipeViewModelTests` (2), verifying view models correctly surface use case results/errors, delegate every mutation to a Use Case, and never duplicate business logic.
 
 Test names describe business behaviour (e.g. `test_evaluateRecipe_blocksCooking_whenEssentialIngredientIsMissingWithNoSubstitute`), and every use case has both happy-path and failure-path coverage.
 
@@ -112,13 +119,16 @@ FridgeFix/
 │   │                        IngredientSubstitution, RecipeEvaluation,
 │   │                        RecipeFeasibility, ShoppingListItem
 │   ├── Errors/               AddPantryItemError, UpdatePantryItemError,
-│   │                        ToggleShoppingListItemError
+│   │                        RemovePantryItemError, ToggleShoppingListItemError,
+│   │                        RemoveShoppingListItemError,
+│   │                        AddMissingIngredientToShoppingListError,
+│   │                        EvaluateRecipeFeasibilityError
 │   └── Protocols/            PantryRepository, ShoppingListRepository,
 │                            RecipeRepository, SubstitutionProviding
 ├── UseCases/                EvaluateRecipeFeasibilityUseCase, AddPantryItemUseCase,
-│                            UpdatePantryItemUseCase,
+│                            UpdatePantryItemUseCase, RemovePantryItemUseCase,
 │                            AddMissingIngredientToShoppingListUseCase,
-│                            ToggleShoppingListItemUseCase
+│                            ToggleShoppingListItemUseCase, RemoveShoppingListItemUseCase
 ├── Services/                 LocalSubstitutionService
 ├── Data/                     InMemoryPantryRepository, InMemoryShoppingListRepository,
 │                            InMemoryRecipeRepository
