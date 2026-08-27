@@ -45,7 +45,7 @@ struct PantryView: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityElement(children: .combine)
-                        .accessibilityLabel("\(item.name), \(item.formattedQuantity)")
+                        .accessibilityLabel("\(item.name), \(item.ingredient.category.rawValue), \(item.formattedQuantity)")
                         .accessibilityHint("Double tap to update quantity")
                     }
                     .onDelete(perform: removeItems)

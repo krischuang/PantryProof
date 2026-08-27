@@ -41,6 +41,7 @@ struct ShoppingListView: View {
                         .buttonStyle(.plain)
                         .accessibilityLabel("\(item.name), \(item.formattedQuantity)")
                         .accessibilityValue(item.isCompleted ? "Bought" : "Not bought")
+                        .accessibilityHint("Double tap to toggle bought")
                         .accessibilityAddTraits(.isButton)
                     }
                     .onDelete(perform: removeItems)
