@@ -13,6 +13,7 @@ import Observation
 /// ``AddPantryItemUseCase`` and maps the outcome (a refreshed items list,
 /// or a typed ``AddPantryItemError``) into presentation state the view can
 /// render. No pantry business rule is duplicated here.
+@MainActor
 @Observable
 final class PantryViewModel {
     private(set) var items: [PantryItem] = []
