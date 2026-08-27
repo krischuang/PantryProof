@@ -14,6 +14,11 @@ import Foundation
 enum AddPantryItemError: LocalizedError, Equatable {
     case emptyIngredientName
     case invalidQuantity
+    /// An ingredient with this name is already in the pantry. FridgeFix
+    /// rejects the second entry outright rather than silently merging or
+    /// creating a second row for the same ingredient — see
+    /// `AddPantryItemUseCase` for why.
+    case duplicateIngredient(name: String)
 
     var errorDescription: String? {
         switch self {
@@ -21,6 +26,8 @@ enum AddPantryItemError: LocalizedError, Equatable {
             return "Please enter an ingredient name so FridgeFix knows what to add."
         case .invalidQuantity:
             return "Quantity must be zero or greater."
+        case .duplicateIngredient(let name):
+            return "You already have \(name) in your pantry. Update its quantity instead of adding it again."
         }
     }
 }
