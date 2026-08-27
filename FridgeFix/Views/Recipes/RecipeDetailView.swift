@@ -25,7 +25,7 @@ struct RecipeDetailView: View {
                 Text(recipe.summary)
                     .foregroundStyle(.secondary)
                 if let evaluation = recipeViewModel.evaluation {
-                    FeasibilityBanner(feasibility: evaluation.feasibility)
+                    FeasibilityBanner(evaluation: evaluation)
                 }
             }
 
@@ -54,21 +54,49 @@ struct RecipeDetailView: View {
     }
 }
 
+/// The feasibility verdict plus one sentence of recovery guidance, so the
+/// cook always knows not just *what* FridgeFix decided but *what to do
+/// next* — the same principle applied to every error message in the app.
 private struct FeasibilityBanner: View {
-    let feasibility: RecipeFeasibility
+    let evaluation: RecipeEvaluation
 
     var body: some View {
-        Label(feasibility.title, systemImage: feasibility.symbolName)
-            .font(.headline)
-            .foregroundStyle(color)
-            .accessibilityLabel("Feasibility: \(feasibility.title)")
+        VStack(alignment: .leading, spacing: 4) {
+            Label(evaluation.feasibility.title, systemImage: evaluation.feasibility.symbolName)
+                .font(.headline)
+                .foregroundStyle(color)
+            Text(guidance)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Feasibility: \(evaluation.feasibility.title). \(guidance)")
     }
 
     private var color: Color {
-        switch feasibility {
+        switch evaluation.feasibility {
         case .readyToCook: return .green
         case .canMakeWithAdjustments: return .orange
         case .blocked: return .red
+        }
+    }
+
+    /// A concrete next step, derived from the same evaluation the banner's
+    /// verdict came from — never a generic message that could disagree
+    /// with what's shown below.
+    private var guidance: String {
+        switch evaluation.feasibility {
+        case .readyToCook:
+            return "Everything this recipe needs is already in your pantry."
+        case .canMakeWithAdjustments:
+            let names = evaluation.missingIngredients
+                .filter { $0.hasSubstitution }
+                .map(\.ingredient.name)
+            return "Use a substitute for \(names.joined(separator: ", ")) — see the ingredient list below."
+        case .blocked:
+            let unresolved = evaluation.missingIngredients.filter { !$0.hasSubstitution && $0.role != .optional }
+            let names = unresolved.map(\.ingredient.name)
+            return "\(names.joined(separator: ", ")) — no substitute available. Add to your shopping list below."
         }
     }
 }
