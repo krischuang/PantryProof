@@ -42,8 +42,32 @@ struct EvaluateRecipeFeasibilityUseCase {
             recipeIngredient: recipeIngredient,
             pantryQuantity: pantryItem.quantity,
             pantryUnit: pantryItem.unit,
-            availability: .available,
+            availability: availability(of: pantryItem, comparedTo: recipeIngredient),
             substitutions: []
         )
+    }
+
+    /// Quantity-aware availability for an ingredient already confirmed to
+    /// be in the pantry:
+    ///
+    /// - pantry quantity >= required quantity → ``IngredientAvailability/available``
+    /// - pantry quantity < required quantity → ``IngredientAvailability/insufficient``
+    ///
+    /// **Deliberately no unit conversion.** Quantities are compared
+    /// directly only when the pantry and recipe already use the exact same
+    /// ``MeasurementUnit`` case. When the units genuinely differ (e.g. the
+    /// recipe wants tablespoons of butter and the pantry has it in grams),
+    /// converting between them reliably would require a real
+    /// measurement-conversion engine — ingredient density, package
+    /// rounding, and so on — which is out of scope for FridgeFix. Rather
+    /// than invent an unreliable conversion that could tell the cook the
+    /// wrong thing, FridgeFix falls back to the ingredient's mere presence
+    /// in the pantry and leaves the pantry's own quantity visible in the UI
+    /// so the cook can judge for themselves.
+    private func availability(of pantryItem: PantryItem, comparedTo recipeIngredient: RecipeIngredient) -> IngredientAvailability {
+        guard pantryItem.unit == recipeIngredient.unit else {
+            return .available
+        }
+        return pantryItem.quantity >= recipeIngredient.quantity ? .available : .insufficient
     }
 }
