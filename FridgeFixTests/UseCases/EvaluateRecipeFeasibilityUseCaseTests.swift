@@ -28,58 +28,58 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
 
     // MARK: - Quantity-aware availability
 
-    func test_evaluateRecipe_reportsAvailable_whenPantryQuantityExactlyMeetsRequirement() {
+    func test_evaluateRecipe_reportsAvailable_whenPantryQuantityExactlyMeetsRequirement() throws {
         let chicken = makeIngredient("Chicken")
         let recipe = makeRecipe(ingredients: [
             RecipeIngredient(ingredient: chicken, quantity: 400, unit: .grams, role: .essential)
         ])
         let pantry = [PantryItem(ingredient: chicken, quantity: 400, unit: .grams)]
 
-        let evaluation = EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
+        let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
 
         XCTAssertEqual(evaluation.evaluatedIngredients.first?.availability, .available)
     }
 
-    func test_evaluateRecipe_reportsAvailable_whenPantryQuantityExceedsRequirement() {
+    func test_evaluateRecipe_reportsAvailable_whenPantryQuantityExceedsRequirement() throws {
         let chicken = makeIngredient("Chicken")
         let recipe = makeRecipe(ingredients: [
             RecipeIngredient(ingredient: chicken, quantity: 400, unit: .grams, role: .essential)
         ])
         let pantry = [PantryItem(ingredient: chicken, quantity: 600, unit: .grams)]
 
-        let evaluation = EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
+        let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
 
         XCTAssertEqual(evaluation.evaluatedIngredients.first?.availability, .available)
     }
 
-    func test_evaluateRecipe_reportsInsufficient_whenPantryQuantityIsBelowRequirement() {
+    func test_evaluateRecipe_reportsInsufficient_whenPantryQuantityIsBelowRequirement() throws {
         let chicken = makeIngredient("Chicken")
         let recipe = makeRecipe(ingredients: [
             RecipeIngredient(ingredient: chicken, quantity: 400, unit: .grams, role: .essential)
         ])
         let pantry = [PantryItem(ingredient: chicken, quantity: 200, unit: .grams)]
 
-        let evaluation = EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
+        let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
 
         let evaluatedChicken = evaluation.evaluatedIngredients.first
         XCTAssertEqual(evaluatedChicken?.availability, .insufficient)
         XCTAssertEqual(evaluatedChicken?.pantryQuantity, 200)
     }
 
-    func test_evaluateRecipe_reportsMissing_whenIngredientIsNotInPantry() {
+    func test_evaluateRecipe_reportsMissing_whenIngredientIsNotInPantry() throws {
         let chicken = makeIngredient("Chicken")
         let recipe = makeRecipe(ingredients: [
             RecipeIngredient(ingredient: chicken, quantity: 400, unit: .grams, role: .essential)
         ])
 
-        let evaluation = EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: [])
+        let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: [])
 
         let evaluatedChicken = evaluation.evaluatedIngredients.first
         XCTAssertEqual(evaluatedChicken?.availability, .missing)
         XCTAssertNil(evaluatedChicken?.pantryQuantity)
     }
 
-    func test_evaluateRecipe_marksQuantityUnverified_whenPantryAndRecipeUnitsDiffer() {
+    func test_evaluateRecipe_marksQuantityUnverified_whenPantryAndRecipeUnitsDiffer() throws {
         let butter = makeIngredient("Butter")
         let recipe = makeRecipe(ingredients: [
             RecipeIngredient(ingredient: butter, quantity: 2, unit: .tablespoons, role: .essential)
@@ -89,19 +89,19 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
         // the quantity is sufficient.
         let pantry = [PantryItem(ingredient: butter, quantity: 5, unit: .grams)]
 
-        let evaluation = EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
+        let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
 
         XCTAssertEqual(evaluation.evaluatedIngredients.first?.availability, .quantityUnverified)
     }
 
-    func test_evaluateRecipe_doesNotReportReadyToCook_whenEssentialQuantityCannotBeVerified() {
+    func test_evaluateRecipe_doesNotReportReadyToCook_whenEssentialQuantityCannotBeVerified() throws {
         let butter = makeIngredient("Butter")
         let recipe = makeRecipe(ingredients: [
             RecipeIngredient(ingredient: butter, quantity: 2, unit: .tablespoons, role: .essential)
         ])
         let pantry = [PantryItem(ingredient: butter, quantity: 500, unit: .grams)]
 
-        let evaluation = EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
+        let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
 
         // Presence is confirmed but the amount is not, so FridgeFix must
         // never claim "ready to cook" — but it also must not block the
@@ -112,18 +112,18 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
 
     // MARK: - Role-driven blocking
 
-    func test_evaluateRecipe_blocksCooking_whenEssentialIngredientIsMissingWithNoSubstitute() {
+    func test_evaluateRecipe_blocksCooking_whenEssentialIngredientIsMissingWithNoSubstitute() throws {
         let chicken = makeIngredient("Chicken")
         let recipe = makeRecipe(ingredients: [
             RecipeIngredient(ingredient: chicken, quantity: 400, unit: .grams, role: .essential)
         ])
 
-        let evaluation = EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: [])
+        let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: [])
 
         XCTAssertEqual(evaluation.feasibility, .blocked)
     }
 
-    func test_evaluateRecipe_allowsAdjustments_whenEssentialIngredientMissingButSubstituteExists() {
+    func test_evaluateRecipe_allowsAdjustments_whenEssentialIngredientMissingButSubstituteExists() throws {
         let cream = makeIngredient("Cream")
         let milk = makeIngredient("Milk")
         let recipe = makeRecipe(ingredients: [
@@ -134,24 +134,24 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
             "cream": [IngredientSubstitution(original: cream, substitute: milk)]
         ])
 
-        let evaluation = EvaluateRecipeFeasibilityUseCase(substitutionProvider: substitutionProvider)
+        let evaluation = try EvaluateRecipeFeasibilityUseCase(substitutionProvider: substitutionProvider)
             .execute(recipe: recipe, pantry: pantry)
 
         XCTAssertEqual(evaluation.feasibility, .canMakeWithAdjustments)
     }
 
-    func test_evaluateRecipe_blocksCooking_whenReplaceableIngredientIsMissingWithNoSubstitute() {
+    func test_evaluateRecipe_blocksCooking_whenReplaceableIngredientIsMissingWithNoSubstitute() throws {
         let parmesan = makeIngredient("Parmesan")
         let recipe = makeRecipe(ingredients: [
             RecipeIngredient(ingredient: parmesan, quantity: 50, unit: .grams, role: .replaceable)
         ])
 
-        let evaluation = EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: [])
+        let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: [])
 
         XCTAssertEqual(evaluation.feasibility, .blocked)
     }
 
-    func test_evaluateRecipe_allowsAdjustments_whenReplaceableIngredientHasSubstituteAvailable() {
+    func test_evaluateRecipe_allowsAdjustments_whenReplaceableIngredientHasSubstituteAvailable() throws {
         let parmesan = makeIngredient("Parmesan")
         let cheddar = makeIngredient("Cheddar")
         let recipe = makeRecipe(ingredients: [
@@ -162,13 +162,13 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
             "parmesan": [IngredientSubstitution(original: parmesan, substitute: cheddar)]
         ])
 
-        let evaluation = EvaluateRecipeFeasibilityUseCase(substitutionProvider: substitutionProvider)
+        let evaluation = try EvaluateRecipeFeasibilityUseCase(substitutionProvider: substitutionProvider)
             .execute(recipe: recipe, pantry: pantry)
 
         XCTAssertEqual(evaluation.feasibility, .canMakeWithAdjustments)
     }
 
-    func test_evaluateRecipe_doesNotBlockCooking_whenOptionalIngredientIsMissing() {
+    func test_evaluateRecipe_doesNotBlockCooking_whenOptionalIngredientIsMissing() throws {
         let chicken = makeIngredient("Chicken")
         let garnish = makeIngredient("Parsley")
         let recipe = makeRecipe(ingredients: [
@@ -177,14 +177,14 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
         ])
         let pantry = [PantryItem(ingredient: chicken, quantity: 400, unit: .grams)]
 
-        let evaluation = EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
+        let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
 
         XCTAssertEqual(evaluation.feasibility, .readyToCook)
     }
 
     // MARK: - Overall feasibility
 
-    func test_evaluateRecipe_isReadyToCook_whenAllIngredientsAreFullyAvailable() {
+    func test_evaluateRecipe_isReadyToCook_whenAllIngredientsAreFullyAvailable() throws {
         let chicken = makeIngredient("Chicken")
         let rice = makeIngredient("Rice")
         let recipe = makeRecipe(ingredients: [
@@ -196,12 +196,12 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
             PantryItem(ingredient: rice, quantity: 500, unit: .grams)
         ]
 
-        let evaluation = EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
+        let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
 
         XCTAssertEqual(evaluation.feasibility, .readyToCook)
     }
 
-    func test_evaluateRecipe_isBlocked_whenMixedAvailabilityIncludesAnUnresolvedEssential() {
+    func test_evaluateRecipe_isBlocked_whenMixedAvailabilityIncludesAnUnresolvedEssential() throws {
         let chicken = makeIngredient("Chicken")
         let rice = makeIngredient("Rice")
         let garnish = makeIngredient("Parsley")
@@ -215,8 +215,18 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
         // substitute, so the overall recipe must still be blocked.
         let pantry = [PantryItem(ingredient: rice, quantity: 500, unit: .grams)]
 
-        let evaluation = EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
+        let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
 
         XCTAssertEqual(evaluation.feasibility, .blocked)
+    }
+
+    // MARK: - Malformed recipes
+
+    func test_evaluateRecipe_fails_whenRecipeContainsNoIngredients() {
+        let recipe = makeRecipe(ingredients: [])
+
+        XCTAssertThrowsError(try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: [])) { error in
+            XCTAssertEqual(error as? EvaluateRecipeFeasibilityError, .recipeHasNoIngredients)
+        }
     }
 }
