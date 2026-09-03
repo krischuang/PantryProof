@@ -9,7 +9,7 @@ import Observation
 /// Presentation state and actions for the Shopping List screen.
 ///
 /// Like ``PantryViewModel``, this type holds no shopping-list business
-/// rules itself — duplicate prevention lives in
+/// rules itself - duplicate prevention lives in
 /// ``AddMissingIngredientToShoppingListUseCase`` and the "item not found"
 /// guard lives in ``ToggleShoppingListItemUseCase``. The view model only
 /// tracks the current list and maps use case failures into a message the

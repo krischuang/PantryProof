@@ -10,7 +10,7 @@ import SwiftUI
 ///
 /// `HomeView` owns the shared repositories and view models for the whole
 /// app session, so the same pantry and shopping list state is visible
-/// consistently across every screen — adding an item in `PantryView` is
+/// consistently across every screen - adding an item in `PantryView` is
 /// immediately reflected in a recipe evaluation, for example.
 struct HomeView: View {
     @State private var pantryViewModel: PantryViewModel

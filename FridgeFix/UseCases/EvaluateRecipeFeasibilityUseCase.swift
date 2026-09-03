@@ -5,12 +5,12 @@
 
 import Foundation
 
-/// Answers FridgeFix's central question — "Can I still make this recipe?"
-/// — by comparing a ``Recipe``'s requirements against the current pantry.
+/// Answers FridgeFix's central question - "Can I still make this recipe?"
+/// - by comparing a ``Recipe``'s requirements against the current pantry.
 ///
 /// This is the primary business operation in FridgeFix. It is deliberately
-/// a pure, deterministic function of its inputs — no persistence, no
-/// randomness, no clock — so the same recipe and pantry combination always
+/// a pure, deterministic function of its inputs - no persistence, no
+/// randomness, no clock - so the same recipe and pantry combination always
 /// produces the same ``RecipeEvaluation``. That determinism is what makes
 /// the use case straightforward to unit test and safe for a view model to
 /// call on demand, every time the pantry or the selected recipe changes.
@@ -52,7 +52,7 @@ struct EvaluateRecipeFeasibilityUseCase {
 
         let availability = availability(of: pantryItem, comparedTo: recipeIngredient)
         // A substitute is only useful information once the ingredient
-        // itself falls short — looking one up for an already-available
+        // itself falls short - looking one up for an already-available
         // ingredient would be wasted work and dead data on every row.
         let substitutions = availability == .available
             ? []
@@ -79,8 +79,8 @@ struct EvaluateRecipeFeasibilityUseCase {
     /// ``MeasurementUnit`` case. When the units genuinely differ (e.g. the
     /// recipe wants tablespoons of butter and the pantry has it in grams),
     /// converting between them reliably would require a real
-    /// measurement-conversion engine — ingredient density, package
-    /// rounding, and so on — which is out of scope for FridgeFix. Rather
+    /// measurement-conversion engine - ingredient density, package
+    /// rounding, and so on - which is out of scope for FridgeFix. Rather
     /// than invent an unreliable conversion, or silently claim the
     /// ingredient is safely ``available``, FridgeFix reports
     /// ``IngredientAvailability/quantityUnverified`` and leaves the

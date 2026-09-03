@@ -7,7 +7,7 @@ import Foundation
 
 /// In-memory, deterministic implementation of ``PantryRepository``.
 ///
-/// FridgeFix runs entirely offline with no persistence across launches —
+/// FridgeFix runs entirely offline with no persistence across launches -
 /// consistent with the app's "small, reproducible, local-only" scope,
 /// where every demo run starts from the same known pantry. A future
 /// implementation backed by a file or database could conform to the same

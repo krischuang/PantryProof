@@ -11,9 +11,9 @@ import Foundation
 /// Kept as its own use case, rather than a direct repository call from the
 /// view model, so pantry removal goes through the same
 /// `View → ViewModel → Use Case → Repository` path as every other pantry
-/// mutation, and so the "item not found" case — the item could have been
+/// mutation, and so the "item not found" case - the item could have been
 /// removed by another action between the list being displayed and the
-/// swipe being handled — is a named business condition instead of a
+/// swipe being handled - is a named business condition instead of a
 /// silent no-op.
 struct RemovePantryItemUseCase {
     private let pantryRepository: PantryRepository

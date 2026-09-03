@@ -7,7 +7,7 @@ import Foundation
 import Observation
 
 /// Presentation state and actions for browsing recipes and asking
-/// FridgeFix's central question — "can I still make this?" — about one of
+/// FridgeFix's central question - "can I still make this?" - about one of
 /// them.
 ///
 /// `RecipeViewModel` never compares ingredients or decides feasibility
@@ -16,7 +16,7 @@ import Observation
 /// current contents at the moment of evaluation so the answer always
 /// reflects the latest pantry state. It does map that domain result into
 /// display-ready wording (``feasibilityGuidance``) so `RecipeDetailView`
-/// never has to re-interpret a `RecipeEvaluation` itself — the domain
+/// never has to re-interpret a `RecipeEvaluation` itself - the domain
 /// decides *what* is true, this type decides *how to phrase it*, and the
 /// view only renders the result.
 @MainActor
@@ -58,7 +58,7 @@ final class RecipeViewModel {
         }
     }
 
-    /// A cheap, side-effect-free feasibility lookup for list-row badges —
+    /// A cheap, side-effect-free feasibility lookup for list-row badges -
     /// does not touch ``evaluation``, so browsing the recipe list never
     /// disturbs whatever evaluation the detail screen is currently
     /// showing.
@@ -95,10 +95,10 @@ final class RecipeViewModel {
 
         var sentences: [String] = []
         if !substitutable.isEmpty {
-            sentences.append("Use a substitute for \(substitutable.joined(separator: ", ")) — see the ingredient list below.")
+            sentences.append("Use a substitute for \(substitutable.joined(separator: ", ")) - see the ingredient list below.")
         }
         if !unverified.isEmpty {
-            sentences.append("Check the amount of \(unverified.joined(separator: ", ")) before cooking — FridgeFix couldn't compare its unit to what the recipe needs.")
+            sentences.append("Check the amount of \(unverified.joined(separator: ", ")) before cooking - FridgeFix couldn't compare its unit to what the recipe needs.")
         }
         return sentences.joined(separator: " ")
     }
@@ -106,6 +106,6 @@ final class RecipeViewModel {
     private func blockedGuidance(for evaluation: RecipeEvaluation) -> String {
         let unresolved = evaluation.missingIngredients.filter { !$0.hasSubstitution && $0.role != .optional }
         let names = unresolved.map(\.ingredient.name)
-        return "\(names.joined(separator: ", ")) — no substitute available. Add to your shopping list below."
+        return "\(names.joined(separator: ", ")) - no substitute available. Add to your shopping list below."
     }
 }

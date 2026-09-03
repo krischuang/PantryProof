@@ -9,8 +9,8 @@ import Foundation
 /// completing FridgeFix's core workflow: evaluate a recipe, see what's
 /// missing, and act on it in one step from the recipe detail screen.
 ///
-/// The quantity passed in is the recipe's own requirement — not whatever
-/// partial amount the pantry might already hold — so the shopping list
+/// The quantity passed in is the recipe's own requirement - not whatever
+/// partial amount the pantry might already hold - so the shopping list
 /// tells the cook exactly how much to buy, not just that they need "some".
 struct AddMissingIngredientToShoppingListUseCase {
     private let shoppingListRepository: ShoppingListRepository
@@ -24,7 +24,7 @@ struct AddMissingIngredientToShoppingListUseCase {
     ///
     /// **Duplicate rule:** if the ingredient is already on the list and not
     /// yet ``ShoppingListItem/isCompleted``, that existing entry is
-    /// returned unchanged instead of adding a second row — tapping "Add to
+    /// returned unchanged instead of adding a second row - tapping "Add to
     /// Shopping List" from a recipe the cook has already flagged should not
     /// create a growing pile of duplicate entries for the same trip. Once
     /// an entry is marked completed (bought), it no longer counts as a

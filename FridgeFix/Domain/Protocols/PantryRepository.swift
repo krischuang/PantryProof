@@ -15,15 +15,15 @@ import Foundation
 /// above this protocol needs to change if that later becomes persistent.
 ///
 /// Constrained to `AnyObject` because a repository is inherently a shared,
-/// mutable service — every use case and view model that holds one must
-/// observe the same underlying storage — which is reference semantics by
+/// mutable service - every use case and view model that holds one must
+/// observe the same underlying storage - which is reference semantics by
 /// definition, not a value type accidentally behaving like one.
 protocol PantryRepository: AnyObject {
     /// Every item currently in the pantry.
     func fetchAll() -> [PantryItem]
 
     /// Adds a new item to the pantry. Callers are responsible for having
-    /// already validated the item — see `AddPantryItemUseCase`.
+    /// already validated the item - see `AddPantryItemUseCase`.
     func add(_ item: PantryItem)
 
     /// Replaces an existing pantry item (matched by `id`) with `item`.

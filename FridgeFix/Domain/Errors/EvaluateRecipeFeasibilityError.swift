@@ -9,7 +9,7 @@ import Foundation
 /// pantry comparison even happens.
 enum EvaluateRecipeFeasibilityError: LocalizedError, Equatable {
     /// The recipe has no ingredient requirements, so there is nothing for
-    /// FridgeFix to compare against the pantry — a data problem with the
+    /// FridgeFix to compare against the pantry - a data problem with the
     /// recipe itself, not a pantry shortfall.
     case recipeHasNoIngredients
 

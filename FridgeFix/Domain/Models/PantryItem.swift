@@ -8,7 +8,7 @@ import Foundation
 /// A quantity of an ``Ingredient`` the home cook currently has on hand.
 ///
 /// `PantryItem` is what FridgeFix compares a recipe's requirements
-/// against to answer "can I still make this?" — it is the system's record
+/// against to answer "can I still make this?" - it is the system's record
 /// of reality (what's actually in the fridge/pantry), as opposed to
 /// ``RecipeIngredient``, which is a recipe's *requirement*. The two are
 /// deliberately separate types even though they share the same shape,

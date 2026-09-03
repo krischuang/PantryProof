@@ -9,7 +9,7 @@ import SwiftUI
 /// recipe by showing the overall verdict alongside exactly why, ingredient
 /// by ingredient.
 ///
-/// This view renders `recipeViewModel.evaluation` — it does not compare
+/// This view renders `recipeViewModel.evaluation` - it does not compare
 /// ingredients or compute feasibility itself. Every rule the cook sees here
 /// (available/insufficient/missing, essential/replaceable/optional,
 /// substitution guidance, the overall verdict) comes from
@@ -59,12 +59,12 @@ struct RecipeDetailView: View {
 
 /// The feasibility verdict plus one sentence of recovery guidance, so the
 /// cook always knows not just *what* FridgeFix decided but *what to do
-/// next* — the same principle applied to every error message in the app.
+/// next* - the same principle applied to every error message in the app.
 ///
 /// Purely a rendering of already-decided state: `feasibility` names the
 /// domain verdict and `guidance` is `RecipeViewModel`'s presentation
 /// mapping of it. This view does not filter ingredients, weigh
-/// substitutions, or otherwise re-derive what the verdict means — it only
+/// substitutions, or otherwise re-derive what the verdict means - it only
 /// picks a colour for the verdict it was given.
 private struct FeasibilityBanner: View {
     let feasibility: RecipeFeasibility
@@ -133,7 +133,7 @@ private struct IngredientEvaluationRow: View {
     private var requirementLine: some View {
         switch evaluatedIngredient.availability {
         case .available:
-            Text("Needs \(evaluatedIngredient.recipeIngredient.formattedQuantity) — available")
+            Text("Needs \(evaluatedIngredient.recipeIngredient.formattedQuantity) - available")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         case .insufficient:
@@ -141,7 +141,7 @@ private struct IngredientEvaluationRow: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         case .missing:
-            Text("Needs \(evaluatedIngredient.recipeIngredient.formattedQuantity) — not in your pantry.")
+            Text("Needs \(evaluatedIngredient.recipeIngredient.formattedQuantity) - not in your pantry.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         case .quantityUnverified:

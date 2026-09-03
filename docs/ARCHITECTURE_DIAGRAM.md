@@ -1,7 +1,7 @@
-# FridgeFix — Human-System Architecture Diagram
+# FridgeFix - Human-System Architecture Diagram
 
 This is a one-page view of how FridgeFix is layered, and how a single
-end-to-end interaction — the home cook asking "can I still make this?" —
+end-to-end interaction - the home cook asking "can I still make this?" -
 crosses that layering from a human action to a human-readable answer.
 
 ## Layer Structure
@@ -58,7 +58,7 @@ flowchart TD
 </details>
 
 The same `RecipeEvaluation` produced by the use case is what the view
-renders — there is no second, independent place where feasibility could be
+renders - there is no second, independent place where feasibility could be
 recomputed differently. If the cook chooses to add a missing ingredient to
 the shopping list, that action re-enters the same pattern one layer down:
 `RecipeDetailView → ShoppingListViewModel → AddMissingIngredientToShoppingListUseCase → ShoppingListRepository`.

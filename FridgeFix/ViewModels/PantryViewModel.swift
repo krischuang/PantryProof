@@ -9,7 +9,7 @@ import Observation
 /// Presentation state and actions for the Pantry screen.
 ///
 /// `PantryViewModel` does not itself decide whether a pantry entry is
-/// valid or a duplicate — it delegates that entirely to
+/// valid or a duplicate - it delegates that entirely to
 /// ``AddPantryItemUseCase`` / ``UpdatePantryItemUseCase`` and maps the
 /// outcome (a refreshed items list, or a typed error) into presentation
 /// state the view can render. No pantry business rule is duplicated here.

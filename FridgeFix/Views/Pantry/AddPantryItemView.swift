@@ -8,7 +8,7 @@ import SwiftUI
 /// A form for adding a new pantry item, presented as a sheet from
 /// ``PantryView``.
 ///
-/// This view collects raw input only — every validation and duplicate rule
+/// This view collects raw input only - every validation and duplicate rule
 /// is enforced by ``AddPantryItemUseCase`` via ``PantryViewModel``, not
 /// here.
 struct AddPantryItemView: View {

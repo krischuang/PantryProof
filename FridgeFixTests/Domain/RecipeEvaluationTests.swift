@@ -7,7 +7,7 @@ import XCTest
 @testable import FridgeFix
 
 /// Tests `RecipeEvaluation.feasibility` directly, against hand-built
-/// evaluated ingredient rows — independent of
+/// evaluated ingredient rows - independent of
 /// `EvaluateRecipeFeasibilityUseCase`'s pantry-matching logic (covered
 /// separately in `EvaluateRecipeFeasibilityUseCaseTests`). This isolates
 /// the pure business rule itself: given a set of already-evaluated rows,
@@ -85,7 +85,7 @@ final class RecipeEvaluationTests: XCTestCase {
             makeRow(role: .essential, availability: .quantityUnverified, hasSubstitution: false)
         ])
 
-        // Presence is confirmed but the amount is not — never blocked, but
+        // Presence is confirmed but the amount is not - never blocked, but
         // never a bare "ready to cook" either.
         XCTAssertEqual(evaluation.feasibility, .canMakeWithAdjustments)
     }
@@ -101,7 +101,7 @@ final class RecipeEvaluationTests: XCTestCase {
 
     func test_feasibility_prefersBlocked_whenBothUnresolvedAndAdjustableIngredientsExist() {
         // A blocked essential ingredient must dominate the verdict even
-        // when another ingredient could be adjusted for — FridgeFix never
+        // when another ingredient could be adjusted for - FridgeFix never
         // reports "can make with adjustments" while something remains
         // genuinely blocking.
         let evaluation = makeEvaluation([

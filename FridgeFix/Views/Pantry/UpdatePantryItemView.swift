@@ -6,7 +6,7 @@
 import SwiftUI
 
 /// A form for updating an existing pantry item's quantity, presented as a
-/// sheet from ``PantryView`` — either by tapping the item directly, or by
+/// sheet from ``PantryView`` - either by tapping the item directly, or by
 /// following the "update its quantity instead" guidance in a duplicate
 /// ingredient error.
 struct UpdatePantryItemView: View {

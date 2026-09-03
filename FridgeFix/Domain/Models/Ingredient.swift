@@ -8,7 +8,7 @@ import Foundation
 /// Represents a food ingredient recognised by FridgeFix, such as "Chicken
 /// Breast" or "Greek Yogurt".
 ///
-/// `Ingredient` models identity only — a name and a broad category — with
+/// `Ingredient` models identity only - a name and a broad category - with
 /// no quantity or unit attached. A quantity only makes sense once an
 /// ingredient is placed in a context: sitting in the pantry (`PantryItem`)
 /// or required by a recipe (`RecipeIngredient`). Keeping `Ingredient` free
@@ -17,8 +17,8 @@ import Foundation
 ///
 /// Ingredient identity is used consistently across pantry management,
 /// substitution matching and recipe feasibility evaluation, so ``matches(_:)``
-/// is the single place that decides whether two ingredients — typed by a
-/// user, defined in a recipe, or suggested as a substitute — refer to the
+/// is the single place that decides whether two ingredients - typed by a
+/// user, defined in a recipe, or suggested as a substitute - refer to the
 /// same real-world food.
 struct Ingredient: Identifiable, Hashable, Codable {
     let id: UUID
@@ -35,7 +35,7 @@ struct Ingredient: Identifiable, Hashable, Codable {
     /// case and surrounding whitespace.
     ///
     /// A home cook typing "greek yogurt" while a recipe lists "Greek
-    /// Yogurt" should count as a match — FridgeFix does not require exact
+    /// Yogurt" should count as a match - FridgeFix does not require exact
     /// string equality for something a user never sees as a raw string
     /// comparison.
     func matches(_ other: Ingredient) -> Bool {

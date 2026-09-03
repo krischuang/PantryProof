@@ -19,7 +19,7 @@ protocol ShoppingListRepository: AnyObject {
     func add(_ item: ShoppingListItem)
 
     /// Replaces an existing shopping list item (matched by `id`) with
-    /// `item` — used to persist a completion toggle or quantity change.
+    /// `item` - used to persist a completion toggle or quantity change.
     func update(_ item: ShoppingListItem)
 
     /// Removes the shopping list item with the given `id`, if one exists.

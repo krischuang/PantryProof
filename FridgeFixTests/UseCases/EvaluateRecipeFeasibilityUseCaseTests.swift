@@ -84,7 +84,7 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
         let recipe = makeRecipe(ingredients: [
             RecipeIngredient(ingredient: butter, quantity: 2, unit: .tablespoons, role: .essential)
         ])
-        // Pantry holds butter by weight, not by the tablespoon — units are
+        // Pantry holds butter by weight, not by the tablespoon - units are
         // not directly comparable, so FridgeFix must not silently claim
         // the quantity is sufficient.
         let pantry = [PantryItem(ingredient: butter, quantity: 5, unit: .grams)]
@@ -104,7 +104,7 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
         let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
 
         // Presence is confirmed but the amount is not, so FridgeFix must
-        // never claim "ready to cook" — but it also must not block the
+        // never claim "ready to cook" - but it also must not block the
         // recipe outright, since the ingredient genuinely is in the
         // pantry.
         XCTAssertEqual(evaluation.feasibility, .canMakeWithAdjustments)
@@ -211,7 +211,7 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
             RecipeIngredient(ingredient: garnish, quantity: 1, unit: .tablespoons, role: .optional)
         ])
         // Rice is available and the optional garnish is missing (fine on
-        // its own), but chicken — essential — is missing with no
+        // its own), but chicken - essential - is missing with no
         // substitute, so the overall recipe must still be blocked.
         let pantry = [PantryItem(ingredient: rice, quantity: 500, unit: .grams)]
 
