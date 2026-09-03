@@ -14,7 +14,7 @@ import Foundation
 /// up. A substitution rule that names a candidate the cook does not have
 /// is not useful information for deciding whether tonight's dinner is
 /// possible, so it is filtered out before an `IngredientSubstitution` is
-/// ever created — see `SubstitutionProviding`.
+/// ever created - see `SubstitutionProviding`.
 struct IngredientSubstitution: Identifiable, Hashable {
     var id: String { "\(original.id)->\(substitute.id)" }
     /// The recipe ingredient this substitution stands in for.

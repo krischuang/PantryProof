@@ -17,7 +17,7 @@ import Foundation
 ///   the recipe unless a substitute is available.
 /// - ``replaceable``: not central, but still meaningfully changes the
 ///   dish. Missing or insufficient blocks the recipe *unless* a substitute
-///   is available — a replaceable ingredient the cook can neither buy nor
+///   is available - a replaceable ingredient the cook can neither buy nor
 ///   swap out is exactly as blocking as an essential one.
 /// - ``optional``: a garnish or enhancement. Missing or insufficient never
 ///   blocks the recipe.

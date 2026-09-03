@@ -10,8 +10,8 @@ import Foundation
 ///
 /// `Recipe` is the starting point of FridgeFix's core workflow: the cook
 /// browses recipes, picks one, and asks "can I still make this?". Everything
-/// needed to answer that question — quantities, units, and each
-/// ingredient's ``IngredientRole`` — lives on its ``RecipeIngredient``
+/// needed to answer that question - quantities, units, and each
+/// ingredient's ``IngredientRole`` - lives on its ``RecipeIngredient``
 /// entries, keeping `Recipe` itself a simple composition root rather than a
 /// place where evaluation logic could creep in.
 struct Recipe: Identifiable, Hashable, Codable {

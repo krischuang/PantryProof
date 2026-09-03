@@ -12,7 +12,7 @@ import Foundation
 /// on *what* substitution lookup does, not *how* it is implemented. The
 /// concrete `LocalSubstitutionService` is a small, deterministic, offline
 /// lookup table appropriate for FridgeFix's current scope, but neither the
-/// use case nor its tests need to know that — a future implementation
+/// use case nor its tests need to know that - a future implementation
 /// (a larger rules table, a server-backed lookup) could be substituted in
 /// without changing the feasibility rule at all.
 protocol SubstitutionProviding {

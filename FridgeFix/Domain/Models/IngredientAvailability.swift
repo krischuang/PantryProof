@@ -12,7 +12,7 @@ import Foundation
 ///
 /// Modelled as four states rather than a `Bool` because "have some, but
 /// not enough" is a materially different situation from "have none at
-/// all" — a cook with 200 g of chicken for a 400 g requirement can decide
+/// all" - a cook with 200 g of chicken for a 400 g requirement can decide
 /// to buy 200 g more, whereas a cook with none needs to think about the
 /// ingredient from scratch. Collapsing both into a single "missing" state
 /// would throw away information the recipe detail screen needs to show a
@@ -33,7 +33,7 @@ enum IngredientAvailability: Equatable, Hashable {
     /// The ingredient is in the pantry, but in a different
     /// ``MeasurementUnit`` than the recipe requires, so the quantities
     /// cannot be safely compared without an unreliable conversion.
-    /// FridgeFix never guesses here — it surfaces the pantry's own
+    /// FridgeFix never guesses here - it surfaces the pantry's own
     /// quantity and asks the cook to judge it themselves rather than
     /// silently reporting ``available`` or ``insufficient``.
     case quantityUnverified

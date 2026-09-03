@@ -6,8 +6,8 @@
 import Foundation
 
 /// One recipe ingredient after being compared against the pantry: what the
-/// recipe needs, what (if anything) the pantry currently has, and — once
-/// that alone is not enough — what could stand in for it.
+/// recipe needs, what (if anything) the pantry currently has, and - once
+/// that alone is not enough - what could stand in for it.
 ///
 /// Composition mirrors the rest of the domain model: a
 /// `RecipeIngredientEvaluation` *has a* ``RecipeIngredient`` plus the
@@ -22,13 +22,13 @@ struct RecipeIngredientEvaluation: Identifiable, Hashable {
     /// Quantity currently on hand for this ingredient. `nil` when the
     /// ingredient is not in the pantry at all (`availability == .missing`).
     let pantryQuantity: Double?
-    /// The pantry's own unit for this ingredient — may differ from
+    /// The pantry's own unit for this ingredient - may differ from
     /// `recipeIngredient.unit`, in which case the quantities were not
     /// directly comparable (see `EvaluateRecipeFeasibilityUseCase`).
     let pantryUnit: MeasurementUnit?
     let availability: IngredientAvailability
     /// Substitutes available right now in the pantry. Always empty when
-    /// `availability == .available` — a substitute is only useful
+    /// `availability == .available` - a substitute is only useful
     /// information once the ingredient itself falls short.
     let substitutions: [IngredientSubstitution]
 
@@ -44,7 +44,7 @@ struct RecipeIngredientEvaluation: Identifiable, Hashable {
     }
 }
 
-/// The structured result of comparing a ``Recipe`` against the pantry —
+/// The structured result of comparing a ``Recipe`` against the pantry -
 /// FridgeFix's answer to "can I still make this?".
 ///
 /// Grouping the outcome into one model, instead of several independent
@@ -68,7 +68,7 @@ struct RecipeEvaluation {
     var missingReplaceable: [RecipeIngredientEvaluation] { unresolved(role: .replaceable) }
     var missingOptional: [RecipeIngredientEvaluation] { unresolved(role: .optional) }
 
-    /// Every ingredient that is not fully available, regardless of role —
+    /// Every ingredient that is not fully available, regardless of role -
     /// what the recipe detail screen's "Needs Attention" section renders.
     var missingIngredients: [RecipeIngredientEvaluation] {
         missingEssential + missingReplaceable + missingOptional
@@ -79,20 +79,20 @@ struct RecipeEvaluation {
     }
 
     /// The single, consistent feasibility rule used everywhere FridgeFix
-    /// answers "can I still make this?" — the UI, the unit tests and this
+    /// answers "can I still make this?" - the UI, the unit tests and this
     /// documentation all describe the same cases:
     ///
     /// - **Essential or replaceable**, missing or insufficient, **with no
     ///   substitution available**: blocks the recipe. A replaceable
     ///   ingredient the cook can neither buy nor swap out is exactly as
-    ///   blocking as an essential one — FridgeFix never tells the cook
+    ///   blocking as an essential one - FridgeFix never tells the cook
     ///   "can make with adjustments" while also having no adjustment to
     ///   offer.
     /// - **Essential or replaceable**, missing or insufficient, **with a
     ///   substitution available**: the recipe can still be made with
     ///   adjustments.
     /// - **Essential or replaceable**, with a ``IngredientAvailability/quantityUnverified``
-    ///   amount: never blocks the recipe outright — the ingredient's
+    ///   amount: never blocks the recipe outright - the ingredient's
     ///   *presence* is confirmed, only its quantity is in question, so
     ///   treating it the same as a genuinely missing ingredient would be
     ///   too harsh. But it can never result in ``RecipeFeasibility/readyToCook``

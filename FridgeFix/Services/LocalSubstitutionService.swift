@@ -7,8 +7,8 @@ import Foundation
 
 /// Deterministic, fully offline implementation of ``SubstitutionProviding``.
 ///
-/// FridgeFix runs from local data only — no network calls, no AI-generated
-/// suggestions — so the same recipe and pantry always produce the same
+/// FridgeFix runs from local data only - no network calls, no AI-generated
+/// suggestions - so the same recipe and pantry always produce the same
 /// substitution guidance. Rules are a small, fixed table of ingredient
 /// name → candidate names, covering the ingredients FridgeFix's sample
 /// recipes actually use. This is intentionally not a general-purpose

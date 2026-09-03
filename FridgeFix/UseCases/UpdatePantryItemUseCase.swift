@@ -5,13 +5,13 @@
 
 import Foundation
 
-/// Updates the quantity of an existing pantry item — the action FridgeFix
+/// Updates the quantity of an existing pantry item - the action FridgeFix
 /// actually points the cook toward when ``AddPantryItemError/duplicateIngredient(name:)``
 /// tells them to "update its quantity instead of adding it again".
 ///
 /// Without this use case, that error message would be advice the app
 /// itself couldn't follow through on. It applies the same quantity rule as
-/// ``AddPantryItemUseCase`` — quantity must be zero or greater — but does
+/// ``AddPantryItemUseCase`` - quantity must be zero or greater - but does
 /// not repeat the duplicate check, since updating an item's quantity in
 /// place is exactly the action that check is meant to encourage.
 struct UpdatePantryItemUseCase {

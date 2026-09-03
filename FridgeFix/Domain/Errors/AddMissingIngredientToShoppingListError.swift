@@ -7,7 +7,7 @@ import Foundation
 
 /// The one way adding a recipe ingredient to the shopping list can fail.
 enum AddMissingIngredientToShoppingListError: LocalizedError, Equatable {
-    /// The required quantity is zero or negative — not a meaningful amount
+    /// The required quantity is zero or negative - not a meaningful amount
     /// to put on a shopping list, and a sign the recipe requirement itself
     /// is malformed.
     case invalidRequiredQuantity

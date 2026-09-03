@@ -6,8 +6,8 @@
 import Foundation
 
 /// Adds a new item to the home cook's pantry, enforcing the validation
-/// rules that keep the pantry — and therefore every recipe evaluation
-/// built on top of it — trustworthy.
+/// rules that keep the pantry - and therefore every recipe evaluation
+/// built on top of it - trustworthy.
 ///
 /// An invalid or duplicated pantry entry does not just look wrong in the
 /// list; it silently corrupts every future ``EvaluateRecipeFeasibilityUseCase``

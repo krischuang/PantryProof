@@ -10,7 +10,7 @@ import Foundation
 ///
 /// FridgeFix compares a recipe's required quantity against the pantry's
 /// on-hand quantity to decide ``IngredientAvailability``. That comparison
-/// is only meaningful when both sides are expressed in the *same* unit —
+/// is only meaningful when both sides are expressed in the *same* unit -
 /// 500 g of flour cannot be safely compared to 2 cups without a reliable
 /// conversion table, which is out of scope for FridgeFix's local,
 /// deterministic evaluator. Modelling units as a fixed, closed set (rather

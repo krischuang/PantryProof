@@ -9,7 +9,7 @@ import Foundation
 ///
 /// The four sample recipes are chosen deliberately, not arbitrarily, to
 /// demonstrate every ``RecipeFeasibility`` outcome against
-/// ``InMemoryPantryRepository/sampleItems`` — including the two different
+/// ``InMemoryPantryRepository/sampleItems`` - including the two different
 /// ways a recipe can end up ``RecipeFeasibility/blocked`` (an insufficient
 /// essential ingredient, and a missing replaceable ingredient with no
 /// substitute) so the app never has to be edited by hand to show the full
@@ -43,7 +43,7 @@ extension InMemoryRecipeRepository {
                 ]
             ),
             // Essential Chicken Breast is insufficient (pantry has 400g,
-            // needs 600g) and essential Pasta is missing entirely — neither
+            // needs 600g) and essential Pasta is missing entirely - neither
             // has a substitute, so the recipe is blocked even though Cream
             // (replaceable) has a usable substitute in Milk.
             Recipe(
@@ -69,7 +69,7 @@ extension InMemoryRecipeRepository {
             ),
             // Essential Rice is available; replaceable Butter is missing
             // with no usable substitute (Olive Oil is not in the pantry),
-            // so the recipe is blocked — even though the only other
+            // so the recipe is blocked - even though the only other
             // missing ingredient (Garlic) is merely optional.
             Recipe(
                 name: "Garlic Butter Rice",
