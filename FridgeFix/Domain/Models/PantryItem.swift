@@ -5,15 +5,11 @@
 
 import Foundation
 
-/// A quantity of an ``Ingredient`` the home cook currently has on hand.
+/// An ``Ingredient`` and how much of it the cook currently has.
 ///
-/// `PantryItem` is what FridgeFix compares a recipe's requirements
-/// against to answer "can I still make this?" - it is the system's record
-/// of reality (what's actually in the fridge/pantry), as opposed to
-/// ``RecipeIngredient``, which is a recipe's *requirement*. The two are
-/// deliberately separate types even though they share the same shape,
-/// because a pantry quantity and a required quantity play different roles
-/// in evaluation and must never be confused with one another.
+/// This is what's actually in the pantry, not what a recipe needs (that's
+/// ``RecipeIngredient``). Kept as separate types on purpose - "what I have"
+/// and "what the recipe wants" shouldn't get mixed up.
 struct PantryItem: Identifiable, Hashable, Codable {
     let id: UUID
     var ingredient: Ingredient

@@ -5,13 +5,11 @@
 
 import Foundation
 
-/// In-memory, deterministic implementation of ``PantryRepository``.
+/// In-memory implementation of ``PantryRepository``.
 ///
-/// FridgeFix runs entirely offline with no persistence across launches -
-/// consistent with the app's "small, reproducible, local-only" scope,
-/// where every demo run starts from the same known pantry. A future
-/// implementation backed by a file or database could conform to the same
-/// `PantryRepository` protocol without any use case needing to change.
+/// Nothing persists between launches - every run starts from the same
+/// sample pantry. A file- or database-backed version could implement the
+/// same protocol later without any use case changing.
 final class InMemoryPantryRepository: PantryRepository {
     private var items: [PantryItem]
 
@@ -38,9 +36,8 @@ final class InMemoryPantryRepository: PantryRepository {
 }
 
 extension InMemoryPantryRepository {
-    /// A believable starter pantry, chosen so that FridgeFix's sample
-    /// recipes demonstrate every ``IngredientAvailability`` state
-    /// (available, insufficient, missing) once evaluated against it.
+    /// A starter pantry picked so the sample recipes show off every
+    /// ``IngredientAvailability`` state (available, insufficient, missing).
     static var sampleItems: [PantryItem] {
         [
             PantryItem(ingredient: Ingredient(name: "Chicken Breast", category: .meat), quantity: 400, unit: .grams),

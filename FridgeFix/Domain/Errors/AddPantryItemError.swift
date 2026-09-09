@@ -5,19 +5,13 @@
 
 import Foundation
 
-/// Every way adding a pantry item can fail, each with a message written
-/// for the home cook using the app - not a developer reading a log.
-///
-/// FridgeFix never surfaces a generic "invalid input" or "operation
-/// failed" message: every case here explains what happened and, where
-/// there's a sensible next step, what the cook can do about it.
+/// Every way adding a pantry item can fail. Messages are written for the
+/// cook, not a developer reading a log.
 enum AddPantryItemError: LocalizedError, Equatable {
     case emptyIngredientName
     case invalidQuantity
-    /// An ingredient with this name is already in the pantry. FridgeFix
-    /// rejects the second entry outright rather than silently merging or
-    /// creating a second row for the same ingredient - see
-    /// `AddPantryItemUseCase` for why.
+    /// Already in the pantry under this name - see `AddPantryItemUseCase`
+    /// for why we reject instead of merging.
     case duplicateIngredient(name: String)
 
     var errorDescription: String? {

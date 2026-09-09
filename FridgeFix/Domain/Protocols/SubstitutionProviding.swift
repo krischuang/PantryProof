@@ -5,23 +5,17 @@
 
 import Foundation
 
-/// A domain service that suggests pantry-backed substitutes for a recipe
-/// ingredient the pantry cannot fully cover.
+/// Suggests pantry-backed substitutes for a recipe ingredient the pantry
+/// can't fully cover.
 ///
-/// Abstracted as a protocol so ``EvaluateRecipeFeasibilityUseCase`` depends
-/// on *what* substitution lookup does, not *how* it is implemented. The
-/// concrete `LocalSubstitutionService` is a small, deterministic, offline
-/// lookup table appropriate for FridgeFix's current scope, but neither the
-/// use case nor its tests need to know that - a future implementation
-/// (a larger rules table, a server-backed lookup) could be substituted in
-/// without changing the feasibility rule at all.
+/// A protocol so `EvaluateRecipeFeasibilityUseCase` doesn't care how
+/// substitution lookup works - `LocalSubstitutionService` is a small fixed
+/// table for now, but it could be swapped for something bigger later.
 protocol SubstitutionProviding {
-    /// Every substitute for `ingredient` that is both a sanctioned
-    /// stand-in for it and currently sitting in `pantry`.
+    /// Substitutes for `ingredient` that are both a valid stand-in and
+    /// actually in `pantry` right now.
     ///
-    /// A substitution rule naming a candidate the cook does not have is
-    /// not useful information for deciding whether tonight's dinner is
-    /// possible, so implementations must never return a candidate that
-    /// fails the pantry check.
+    /// Implementations should never return a candidate the cook doesn't
+    /// have - that's not useful information.
     func substitutions(for ingredient: Ingredient, availableIn pantry: [PantryItem]) -> [IngredientSubstitution]
 }

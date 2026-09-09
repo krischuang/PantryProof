@@ -5,17 +5,12 @@
 
 import Foundation
 
-/// The unit a quantity is expressed in, shared by pantry stock, recipe
-/// requirements and shopping list entries.
+/// The unit a quantity is measured in - used by pantry stock, recipe
+/// requirements, and shopping list entries.
 ///
-/// FridgeFix compares a recipe's required quantity against the pantry's
-/// on-hand quantity to decide ``IngredientAvailability``. That comparison
-/// is only meaningful when both sides are expressed in the *same* unit -
-/// 500 g of flour cannot be safely compared to 2 cups without a reliable
-/// conversion table, which is out of scope for FridgeFix's local,
-/// deterministic evaluator. Modelling units as a fixed, closed set (rather
-/// than free-text) is what makes "the same unit" a simple, exact
-/// comparison instead of a fuzzy string match.
+/// A fixed set of units (not free text) so checking "same unit or not" is
+/// an exact comparison. No conversion between units - 500 g vs. 2 cups is
+/// out of scope, so FridgeFix never tries to guess.
 enum MeasurementUnit: String, Codable, CaseIterable, Identifiable {
     case grams = "g"
     case kilograms = "kg"
@@ -29,12 +24,9 @@ enum MeasurementUnit: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var symbol: String { rawValue }
 
-    /// Formats a quantity for display, e.g. `500` → `"500 g"`, `1.5` →
-    /// `"1.5 L"`.
+    /// Formats a quantity for display, e.g. `500` -> `"500 g"`.
     ///
-    /// Centralised here so every screen that shows a quantity (pantry,
-    /// recipe detail, shopping list) renders it identically instead of each
-    /// view reimplementing its own `String(format:)` call.
+    /// One place for this so every screen formats quantities the same way.
     func formatted(_ quantity: Double) -> String {
         let isWholeNumber = quantity.truncatingRemainder(dividingBy: 1) == 0
         let value = isWholeNumber

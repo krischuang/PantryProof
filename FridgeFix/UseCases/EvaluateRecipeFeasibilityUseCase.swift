@@ -5,15 +5,12 @@
 
 import Foundation
 
-/// Answers FridgeFix's central question - "Can I still make this recipe?"
-/// - by comparing a ``Recipe``'s requirements against the current pantry.
+/// Answers "can I still make this?" by comparing a ``Recipe``'s
+/// requirements against the current pantry.
 ///
-/// This is the primary business operation in FridgeFix. It is deliberately
-/// a pure, deterministic function of its inputs - no persistence, no
-/// randomness, no clock - so the same recipe and pantry combination always
-/// produces the same ``RecipeEvaluation``. That determinism is what makes
-/// the use case straightforward to unit test and safe for a view model to
-/// call on demand, every time the pantry or the selected recipe changes.
+/// Pure function of its inputs - no persistence, no randomness - so the
+/// same recipe + pantry always gives the same ``RecipeEvaluation``. Makes
+/// it easy to test and safe to call again whenever the pantry changes.
 struct EvaluateRecipeFeasibilityUseCase {
     private let substitutionProvider: SubstitutionProviding
 
@@ -21,13 +18,12 @@ struct EvaluateRecipeFeasibilityUseCase {
         self.substitutionProvider = substitutionProvider
     }
 
-    /// Compares every ingredient `recipe` requires against `pantry`,
-    /// ingredient by ingredient, and returns the resulting evaluation.
+    /// Compares every ingredient `recipe` requires against `pantry` and
+    /// returns the result.
     ///
-    /// Matching is by ``Ingredient/matches(_:)`` (case/whitespace-insensitive
-    /// name equality) rather than identifier equality, since pantry items
-    /// and recipe ingredients are independently-created `Ingredient`
-    /// values that refer to the same food by name.
+    /// Matches ingredients by name (``Ingredient/matches(_:)``), not id -
+    /// pantry items and recipe ingredients are created separately, so id
+    /// equality would never match.
     ///
     /// - Throws: ``EvaluateRecipeFeasibilityError/recipeHasNoIngredients``
     ///   if `recipe` has no ingredient requirements to compare.
@@ -51,9 +47,8 @@ struct EvaluateRecipeFeasibilityUseCase {
         }
 
         let availability = availability(of: pantryItem, comparedTo: recipeIngredient)
-        // A substitute is only useful information once the ingredient
-        // itself falls short - looking one up for an already-available
-        // ingredient would be wasted work and dead data on every row.
+        // Only bother looking up a substitute once the ingredient actually
+        // falls short - no point checking for something already available.
         let substitutions = availability == .available
             ? []
             : substitutionProvider.substitutions(for: recipeIngredient.ingredient, availableIn: pantry)
@@ -67,25 +62,16 @@ struct EvaluateRecipeFeasibilityUseCase {
         )
     }
 
-    /// Quantity-aware availability for an ingredient already confirmed to
-    /// be in the pantry:
+    /// Availability for an ingredient already confirmed to be in the
+    /// pantry:
     ///
-    /// - pantry quantity >= required quantity → ``IngredientAvailability/available``
-    /// - pantry quantity < required quantity → ``IngredientAvailability/insufficient``
-    /// - units differ → ``IngredientAvailability/quantityUnverified``
+    /// - quantity >= required -> ``IngredientAvailability/available``
+    /// - quantity < required -> ``IngredientAvailability/insufficient``
+    /// - units differ -> ``IngredientAvailability/quantityUnverified``
     ///
-    /// **Deliberately no unit conversion.** Quantities are compared
-    /// directly only when the pantry and recipe already use the exact same
-    /// ``MeasurementUnit`` case. When the units genuinely differ (e.g. the
-    /// recipe wants tablespoons of butter and the pantry has it in grams),
-    /// converting between them reliably would require a real
-    /// measurement-conversion engine - ingredient density, package
-    /// rounding, and so on - which is out of scope for FridgeFix. Rather
-    /// than invent an unreliable conversion, or silently claim the
-    /// ingredient is safely ``available``, FridgeFix reports
-    /// ``IngredientAvailability/quantityUnverified`` and leaves the
-    /// pantry's own quantity visible in the UI so the cook can judge for
-    /// themselves.
+    /// No unit conversion - if the recipe wants tablespoons and the pantry
+    /// has grams, we can't safely compare, so we don't guess. Better to
+    /// show "unverified" and let the cook check than get it wrong.
     private func availability(of pantryItem: PantryItem, comparedTo recipeIngredient: RecipeIngredient) -> IngredientAvailability {
         guard pantryItem.unit == recipeIngredient.unit else {
             return .quantityUnverified

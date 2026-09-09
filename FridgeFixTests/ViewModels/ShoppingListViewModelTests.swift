@@ -31,8 +31,7 @@ final class ShoppingListViewModelTests: XCTestCase {
         let item = ShoppingListItem(ingredient: Ingredient(name: "Milk", category: .dairy), quantity: 1, unit: .liters)
         let repository = InMemoryShoppingListRepository(seedItems: [item])
         let viewModel = ShoppingListViewModel(shoppingListRepository: repository)
-        // Simulate the item having been removed elsewhere between the list
-        // rendering and the cook's tap landing.
+        // Item got removed elsewhere before the tap was handled.
         repository.remove(id: item.id)
 
         viewModel.toggleCompletion(of: item)

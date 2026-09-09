@@ -5,22 +5,17 @@
 
 import Foundation
 
-/// The importance a recipe assigns to one of its ingredients, and the
-/// central input to FridgeFix's feasibility rules.
+/// How important an ingredient is to a recipe - the main input to the
+/// feasibility rules.
 ///
-/// A recipe cannot treat every missing ingredient the same way: running
-/// out of chicken in a chicken curry is not the same situation as running
-/// out of a garnish. `IngredientRole` makes that distinction explicit so
-/// ``EvaluateRecipeFeasibilityUseCase`` can apply a different rule to each:
+/// Running out of chicken in a chicken curry isn't the same problem as
+/// running out of a garnish, so each role gets a different rule:
 ///
-/// - ``essential``: central to the dish. Missing or insufficient blocks
-///   the recipe unless a substitute is available.
-/// - ``replaceable``: not central, but still meaningfully changes the
-///   dish. Missing or insufficient blocks the recipe *unless* a substitute
-///   is available - a replaceable ingredient the cook can neither buy nor
-///   swap out is exactly as blocking as an essential one.
-/// - ``optional``: a garnish or enhancement. Missing or insufficient never
-///   blocks the recipe.
+/// - ``essential``: central to the dish. Missing/insufficient blocks the
+///   recipe unless there's a substitute.
+/// - ``replaceable``: changes the dish but isn't the star. Same rule as
+///   essential - no substitute means it's just as blocking.
+/// - ``optional``: garnish/extra. Never blocks the recipe.
 enum IngredientRole: String, Codable, CaseIterable {
     case essential
     case replaceable
@@ -43,12 +38,12 @@ enum IngredientRole: String, Codable, CaseIterable {
     }
 }
 
-/// An ``Ingredient`` as required by one specific ``Recipe``: how much of it
-/// is needed, in what unit, and how important it is to the dish.
+/// An ``Ingredient`` as required by one recipe: how much, what unit, and
+/// how important it is to the dish.
 ///
-/// The same `Ingredient` (e.g. "Milk") can be essential in one recipe and
-/// merely optional in another, which is why role and quantity live here,
-/// on the recipe's own requirement, rather than on `Ingredient` itself.
+/// Role and quantity live here instead of on `Ingredient` because the same
+/// ingredient (e.g. milk) can be essential in one recipe and optional in
+/// another.
 struct RecipeIngredient: Identifiable, Hashable, Codable {
     let id: UUID
     var ingredient: Ingredient

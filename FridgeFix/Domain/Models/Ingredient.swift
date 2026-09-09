@@ -5,21 +5,11 @@
 
 import Foundation
 
-/// Represents a food ingredient recognised by FridgeFix, such as "Chicken
-/// Breast" or "Greek Yogurt".
+/// A food ingredient, like "Chicken Breast" or "Greek Yogurt".
 ///
-/// `Ingredient` models identity only - a name and a broad category - with
-/// no quantity or unit attached. A quantity only makes sense once an
-/// ingredient is placed in a context: sitting in the pantry (`PantryItem`)
-/// or required by a recipe (`RecipeIngredient`). Keeping `Ingredient` free
-/// of that context lets the same ingredient concept be reused, and
-/// compared, across both.
-///
-/// Ingredient identity is used consistently across pantry management,
-/// substitution matching and recipe feasibility evaluation, so ``matches(_:)``
-/// is the single place that decides whether two ingredients - typed by a
-/// user, defined in a recipe, or suggested as a substitute - refer to the
-/// same real-world food.
+/// Just a name and a category - no quantity. Quantity only makes sense once
+/// an ingredient is placed somewhere, like in the pantry (`PantryItem`) or
+/// on a recipe (`RecipeIngredient`).
 struct Ingredient: Identifiable, Hashable, Codable {
     let id: UUID
     var name: String
@@ -31,19 +21,14 @@ struct Ingredient: Identifiable, Hashable, Codable {
         self.category = category
     }
 
-    /// Whether two ingredients refer to the same real-world food, ignoring
-    /// case and surrounding whitespace.
-    ///
-    /// A home cook typing "greek yogurt" while a recipe lists "Greek
-    /// Yogurt" should count as a match - FridgeFix does not require exact
-    /// string equality for something a user never sees as a raw string
-    /// comparison.
+    /// Whether two ingredients are the same food, ignoring case/whitespace -
+    /// so "greek yogurt" matches "Greek Yogurt".
     func matches(_ other: Ingredient) -> Bool {
         matches(name: other.name)
     }
 
-    /// Whether this ingredient's name refers to the same real-world food as
-    /// `otherName`, ignoring case and surrounding whitespace.
+    /// Whether this ingredient's name matches `otherName`, ignoring
+    /// case/whitespace.
     func matches(name otherName: String) -> Bool {
         Self.normalized(name) == Self.normalized(otherName)
     }
@@ -53,12 +38,10 @@ struct Ingredient: Identifiable, Hashable, Codable {
     }
 }
 
-/// A broad grouping used to organise the pantry and to give ingredients a
-/// recognisable icon in the UI.
+/// A rough grouping for organizing the pantry and picking an icon.
 ///
-/// This is presentation-adjacent, not a business rule: category never
-/// affects recipe feasibility or substitution matching, both of which are
-/// keyed on ``Ingredient/name`` only.
+/// Purely cosmetic - category never affects feasibility or substitution
+/// matching, which only look at the ingredient's name.
 enum IngredientCategory: String, Codable, CaseIterable, Identifiable {
     case produce = "Produce"
     case dairy = "Dairy"

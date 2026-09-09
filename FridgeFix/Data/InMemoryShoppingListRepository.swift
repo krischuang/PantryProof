@@ -5,11 +5,9 @@
 
 import Foundation
 
-/// In-memory, deterministic implementation of ``ShoppingListRepository``.
+/// In-memory implementation of ``ShoppingListRepository``.
 ///
-/// Starts empty on every launch, matching FridgeFix's offline, fully
-/// reproducible scope: the shopping list only ever contains what the
-/// current session has added.
+/// Starts empty every launch - only contains what this session has added.
 final class InMemoryShoppingListRepository: ShoppingListRepository {
     private var items: [ShoppingListItem]
 

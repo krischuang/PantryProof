@@ -6,12 +6,10 @@
 import XCTest
 @testable import FridgeFix
 
-/// Tests `RecipeEvaluation.feasibility` directly, against hand-built
-/// evaluated ingredient rows - independent of
-/// `EvaluateRecipeFeasibilityUseCase`'s pantry-matching logic (covered
-/// separately in `EvaluateRecipeFeasibilityUseCaseTests`). This isolates
-/// the pure business rule itself: given a set of already-evaluated rows,
-/// what is the overall verdict?
+/// Tests `RecipeEvaluation.feasibility` directly against hand-built rows,
+/// separate from `EvaluateRecipeFeasibilityUseCase`'s pantry-matching
+/// (covered in `EvaluateRecipeFeasibilityUseCaseTests`). Just checks: given
+/// these rows, what's the verdict?
 final class RecipeEvaluationTests: XCTestCase {
     private func makeRow(role: IngredientRole, availability: IngredientAvailability, hasSubstitution: Bool = false) -> RecipeIngredientEvaluation {
         let ingredient = Ingredient(name: "Test Ingredient")
@@ -85,8 +83,8 @@ final class RecipeEvaluationTests: XCTestCase {
             makeRow(role: .essential, availability: .quantityUnverified, hasSubstitution: false)
         ])
 
-        // Presence is confirmed but the amount is not - never blocked, but
-        // never a bare "ready to cook" either.
+        // It's in the pantry, just the amount's unclear - not blocked, not
+        // ready either.
         XCTAssertEqual(evaluation.feasibility, .canMakeWithAdjustments)
     }
 
@@ -100,10 +98,8 @@ final class RecipeEvaluationTests: XCTestCase {
     }
 
     func test_feasibility_prefersBlocked_whenBothUnresolvedAndAdjustableIngredientsExist() {
-        // A blocked essential ingredient must dominate the verdict even
-        // when another ingredient could be adjusted for - FridgeFix never
-        // reports "can make with adjustments" while something remains
-        // genuinely blocking.
+        // A blocked essential ingredient should win even if something else
+        // is adjustable.
         let evaluation = makeEvaluation([
             makeRow(role: .essential, availability: .missing, hasSubstitution: false),
             makeRow(role: .replaceable, availability: .missing, hasSubstitution: true)

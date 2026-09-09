@@ -5,12 +5,11 @@
 
 import Foundation
 
-/// The one way asking "can I still make this?" can fail before any
-/// pantry comparison even happens.
+/// The one way evaluating a recipe can fail before any pantry comparison
+/// even happens.
 enum EvaluateRecipeFeasibilityError: LocalizedError, Equatable {
-    /// The recipe has no ingredient requirements, so there is nothing for
-    /// FridgeFix to compare against the pantry - a data problem with the
-    /// recipe itself, not a pantry shortfall.
+    /// Recipe has no ingredients to compare - a problem with the recipe
+    /// data, not the pantry.
     case recipeHasNoIngredients
 
     var errorDescription: String? {

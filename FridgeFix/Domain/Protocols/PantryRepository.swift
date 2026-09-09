@@ -5,30 +5,25 @@
 
 import Foundation
 
-/// Abstraction over where the home cook's pantry is stored.
+/// Abstraction over where the pantry is stored.
 ///
-/// Use cases depend on this protocol, not on any concrete storage
-/// mechanism, so `AddPantryItemUseCase` (and future pantry use cases) stay
-/// unaware of whether the pantry lives in memory, in a file, or in a
-/// database. FridgeFix's current scope only needs a deterministic,
-/// in-memory implementation (`InMemoryPantryRepository`), but nothing
-/// above this protocol needs to change if that later becomes persistent.
+/// Use cases depend on this protocol, not a concrete storage type, so
+/// swapping `InMemoryPantryRepository` for something persistent later
+/// wouldn't require touching any use case.
 ///
-/// Constrained to `AnyObject` because a repository is inherently a shared,
-/// mutable service - every use case and view model that holds one must
-/// observe the same underlying storage - which is reference semantics by
-/// definition, not a value type accidentally behaving like one.
+/// `AnyObject`-constrained because a repository is shared, mutable state -
+/// every use case and view model holding one needs to see the same data.
 protocol PantryRepository: AnyObject {
     /// Every item currently in the pantry.
     func fetchAll() -> [PantryItem]
 
-    /// Adds a new item to the pantry. Callers are responsible for having
-    /// already validated the item - see `AddPantryItemUseCase`.
+    /// Adds a new item. Caller is responsible for validating it first -
+    /// see `AddPantryItemUseCase`.
     func add(_ item: PantryItem)
 
-    /// Replaces an existing pantry item (matched by `id`) with `item`.
+    /// Replaces the item matching `item.id`.
     func update(_ item: PantryItem)
 
-    /// Removes the pantry item with the given `id`, if one exists.
+    /// Removes the item with the given `id`, if it exists.
     func remove(id: UUID)
 }

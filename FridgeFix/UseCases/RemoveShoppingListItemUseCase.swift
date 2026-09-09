@@ -5,14 +5,11 @@
 
 import Foundation
 
-/// Removes an item from the shopping list at the cook's request (as
-/// opposed to ``ToggleShoppingListItemUseCase``, which marks one bought).
+/// Removes an item from the shopping list (different from
+/// ``ToggleShoppingListItemUseCase``, which just marks one bought).
 ///
-/// Kept as its own use case for the same reason as
-/// ``RemovePantryItemUseCase``: it keeps shopping list removal on the same
-/// `View → ViewModel → Use Case → Repository` path as every other mutation,
-/// and names "item not found" as a real business condition rather than a
-/// silent no-op.
+/// Same reasoning as ``RemovePantryItemUseCase`` - keeps removal on the
+/// normal path and treats "item not found" as a real error.
 struct RemoveShoppingListItemUseCase {
     private let shoppingListRepository: ShoppingListRepository
 

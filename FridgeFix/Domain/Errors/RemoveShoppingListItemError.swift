@@ -7,8 +7,7 @@ import Foundation
 
 /// The one way removing a shopping list item can fail.
 enum RemoveShoppingListItemError: LocalizedError, Equatable {
-    /// The item was already removed (e.g. by another action) before this
-    /// removal could be applied.
+    /// Item was already removed by something else before this could run.
     case itemNotFound
 
     var errorDescription: String? {

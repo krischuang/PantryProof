@@ -5,14 +5,11 @@
 
 import Foundation
 
-/// Marks a shopping list item as bought, or un-marks it, in response to the
-/// cook checking it off during a shopping trip.
+/// Marks a shopping list item bought, or un-marks it, when the cook taps it.
 ///
-/// Kept as its own use case, rather than a direct repository call from the
-/// view model, because the "item not found" case is a real business
-/// condition worth naming - the item could have been removed by another
-/// action between the list being displayed and the tap being handled - and
-/// a use case is where that kind of guard belongs, not the view model.
+/// Its own use case so "item not found" (removed elsewhere between the
+/// list rendering and the tap landing) is a real error, not something the
+/// view model has to guard against itself.
 struct ToggleShoppingListItemUseCase {
     private let shoppingListRepository: ShoppingListRepository
 

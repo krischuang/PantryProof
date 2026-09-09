@@ -6,9 +6,9 @@
 import XCTest
 @testable import FridgeFix
 
-/// A substitution provider whose answers are fixed in advance, so tests can
-/// control exactly which ingredients have a usable substitute without
-/// depending on `LocalSubstitutionService`'s specific rule table.
+/// Fake substitution provider so tests can control exactly which
+/// ingredients have a substitute, without depending on
+/// `LocalSubstitutionService`'s actual rules.
 private struct StubSubstitutionProvider: SubstitutionProviding {
     var substitutionsByIngredientName: [String: [IngredientSubstitution]] = [:]
 
@@ -84,9 +84,7 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
         let recipe = makeRecipe(ingredients: [
             RecipeIngredient(ingredient: butter, quantity: 2, unit: .tablespoons, role: .essential)
         ])
-        // Pantry holds butter by weight, not by the tablespoon - units are
-        // not directly comparable, so FridgeFix must not silently claim
-        // the quantity is sufficient.
+        // Pantry has grams, recipe wants tablespoons - can't compare directly.
         let pantry = [PantryItem(ingredient: butter, quantity: 5, unit: .grams)]
 
         let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
@@ -103,10 +101,8 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
 
         let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
 
-        // Presence is confirmed but the amount is not, so FridgeFix must
-        // never claim "ready to cook" - but it also must not block the
-        // recipe outright, since the ingredient genuinely is in the
-        // pantry.
+        // It's in the pantry, just can't verify the amount - not ready,
+        // not blocked.
         XCTAssertEqual(evaluation.feasibility, .canMakeWithAdjustments)
     }
 
@@ -210,9 +206,8 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
             RecipeIngredient(ingredient: rice, quantity: 200, unit: .grams, role: .essential),
             RecipeIngredient(ingredient: garnish, quantity: 1, unit: .tablespoons, role: .optional)
         ])
-        // Rice is available and the optional garnish is missing (fine on
-        // its own), but chicken - essential - is missing with no
-        // substitute, so the overall recipe must still be blocked.
+        // Rice is fine and the missing garnish is fine (it's optional),
+        // but chicken (essential) missing with no substitute blocks it.
         let pantry = [PantryItem(ingredient: rice, quantity: 500, unit: .grams)]
 
         let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)

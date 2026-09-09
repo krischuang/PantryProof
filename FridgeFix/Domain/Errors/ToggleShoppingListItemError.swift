@@ -7,8 +7,8 @@ import Foundation
 
 /// The one way toggling a shopping list item's completion state can fail.
 enum ToggleShoppingListItemError: LocalizedError, Equatable {
-    /// The item was already removed (e.g. by another action) before the
-    /// toggle could be applied.
+    /// Item was already removed by something else before the toggle could
+    /// run.
     case itemNotFound
 
     var errorDescription: String? {

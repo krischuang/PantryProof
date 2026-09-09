@@ -6,19 +6,13 @@
 import Foundation
 import Observation
 
-/// Presentation state and actions for browsing recipes and asking
-/// FridgeFix's central question - "can I still make this?" - about one of
-/// them.
+/// Presentation state and actions for browsing recipes and asking "can I
+/// still make this?" about one of them.
 ///
-/// `RecipeViewModel` never compares ingredients or decides feasibility
-/// itself; every evaluation is delegated to
-/// ``EvaluateRecipeFeasibilityUseCase``, called against the pantry's
-/// current contents at the moment of evaluation so the answer always
-/// reflects the latest pantry state. It does map that domain result into
-/// display-ready wording (``feasibilityGuidance``) so `RecipeDetailView`
-/// never has to re-interpret a `RecipeEvaluation` itself - the domain
-/// decides *what* is true, this type decides *how to phrase it*, and the
-/// view only renders the result.
+/// Never computes feasibility itself - that's all
+/// ``EvaluateRecipeFeasibilityUseCase``. This just turns the result into
+/// display-ready text (``feasibilityGuidance``) so the view doesn't have
+/// to interpret a `RecipeEvaluation` on its own.
 @MainActor
 @Observable
 final class RecipeViewModel {
@@ -45,9 +39,8 @@ final class RecipeViewModel {
         recipes = recipeRepository.fetchAll()
     }
 
-    /// Runs the full evaluation for `recipe` and stores it in
-    /// ``evaluation`` for the recipe detail screen to render. On failure
-    /// (the recipe has no ingredients), ``errorMessage`` is set instead.
+    /// Evaluates `recipe` and stores the result in ``evaluation``. On
+    /// failure (no ingredients), sets ``errorMessage`` instead.
     func evaluate(_ recipe: Recipe) {
         errorMessage = nil
         do {
@@ -58,24 +51,20 @@ final class RecipeViewModel {
         }
     }
 
-    /// A cheap, side-effect-free feasibility lookup for list-row badges -
-    /// does not touch ``evaluation``, so browsing the recipe list never
-    /// disturbs whatever evaluation the detail screen is currently
-    /// showing.
+    /// Quick feasibility lookup for list-row badges. Doesn't touch
+    /// ``evaluation``, so browsing the list doesn't disturb whatever the
+    /// detail screen is currently showing.
     ///
-    /// A recipe with no ingredients cannot be evaluated at all; `.blocked`
-    /// is the safe default badge for that case, consistent with FridgeFix
-    /// never claiming readiness it cannot back up.
+    /// Recipes with no ingredients can't be evaluated, so they default to
+    /// `.blocked` rather than claiming readiness we can't back up.
     func feasibility(for recipe: Recipe) -> RecipeFeasibility {
         let evaluation = try? evaluateFeasibilityUseCase.execute(recipe: recipe, pantry: pantryRepository.fetchAll())
         return evaluation?.feasibility ?? .blocked
     }
 
-    /// One sentence of concrete recovery guidance for the current
-    /// ``evaluation``'s feasibility verdict, derived from that same
-    /// evaluation so the wording can never disagree with the ingredient
-    /// list rendered alongside it. `nil` when there is no evaluation to
-    /// describe.
+    /// One sentence of guidance for the current evaluation's verdict,
+    /// derived from the same evaluation so the wording can't contradict
+    /// the ingredient list next to it. `nil` if there's nothing to show.
     var feasibilityGuidance: String? {
         guard let evaluation else { return nil }
         switch evaluation.feasibility {
