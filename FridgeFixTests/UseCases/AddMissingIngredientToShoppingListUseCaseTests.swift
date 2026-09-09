@@ -49,8 +49,7 @@ final class AddMissingIngredientToShoppingListUseCaseTests: XCTestCase {
 
         try useCase.execute(ingredient: chicken, quantity: 200, unit: .grams)
 
-        // A completed entry represents stock already bought, so a fresh
-        // need for the same ingredient is a genuinely new item.
+        // Completed means already bought, so a fresh need is a new item.
         XCTAssertEqual(repository.fetchAll().count, 2)
     }
 

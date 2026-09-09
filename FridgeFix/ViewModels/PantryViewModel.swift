@@ -8,24 +8,19 @@ import Observation
 
 /// Presentation state and actions for the Pantry screen.
 ///
-/// `PantryViewModel` does not itself decide whether a pantry entry is
-/// valid or a duplicate - it delegates that entirely to
-/// ``AddPantryItemUseCase`` / ``UpdatePantryItemUseCase`` and maps the
-/// outcome (a refreshed items list, or a typed error) into presentation
-/// state the view can render. No pantry business rule is duplicated here.
+/// Doesn't decide validity or duplicates itself - that's all delegated to
+/// ``AddPantryItemUseCase`` / ``UpdatePantryItemUseCase``. This just maps
+/// the result into something the view can render.
 @MainActor
 @Observable
 final class PantryViewModel {
     private(set) var items: [PantryItem] = []
     var errorMessage: String?
-    /// Set when ``addItem(name:quantity:unit:category:)`` fails because the
-    /// ingredient already exists, so the view can offer "update the
-    /// existing item" as a concrete next action instead of leaving the
-    /// cook to hunt for it themselves.
+    /// Set when adding fails because the ingredient's a duplicate, so the
+    /// view can offer "update the existing item" instead.
     private(set) var duplicateItem: PantryItem?
-    /// Set when ``removeItem(_:)`` fails. Kept separate from
-    /// ``errorMessage`` so a removal failure (surfaced as its own alert)
-    /// can never be confused with an add/update form's inline error.
+    /// Set when removal fails. Separate from `errorMessage` so a removal
+    /// alert never gets mixed up with a form's inline error.
     var removalErrorMessage: String?
 
     private let pantryRepository: PantryRepository
@@ -45,9 +40,8 @@ final class PantryViewModel {
         items = pantryRepository.fetchAll()
     }
 
-    /// Attempts to add a pantry item. On failure, ``errorMessage`` is set
-    /// to the failure's human-readable description; the view is
-    /// responsible for presenting it.
+    /// Adds a pantry item. On failure, sets ``errorMessage`` for the view
+    /// to display.
     func addItem(name: String, quantity: Double, unit: MeasurementUnit, category: IngredientCategory) {
         errorMessage = nil
         duplicateItem = nil
@@ -64,9 +58,8 @@ final class PantryViewModel {
         }
     }
 
-    /// Attempts to update an existing pantry item's quantity/unit. On
-    /// failure, ``errorMessage`` is set to the failure's human-readable
-    /// description.
+    /// Updates a pantry item's quantity/unit. On failure, sets
+    /// ``errorMessage``.
     func updateQuantity(for item: PantryItem, quantity: Double, unit: MeasurementUnit) {
         errorMessage = nil
         do {
@@ -77,9 +70,8 @@ final class PantryViewModel {
         }
     }
 
-    /// Attempts to remove a pantry item. On failure (the item was already
-    /// removed by another action), ``removalErrorMessage`` is set to the
-    /// failure's human-readable description.
+    /// Removes a pantry item. On failure (already removed elsewhere), sets
+    /// ``removalErrorMessage``.
     func removeItem(_ item: PantryItem) {
         removalErrorMessage = nil
         do {

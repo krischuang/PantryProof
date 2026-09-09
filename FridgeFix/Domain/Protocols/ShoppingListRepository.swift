@@ -5,23 +5,21 @@
 
 import Foundation
 
-/// Abstraction over where the home cook's shopping list is stored.
+/// Abstraction over where the shopping list is stored.
 ///
-/// Mirrors ``PantryRepository``: use cases depend on this protocol, not on
-/// any concrete storage mechanism, so a future persistent implementation
-/// could replace `InMemoryShoppingListRepository` without any use case
-/// needing to change.
+/// Same idea as ``PantryRepository`` - use cases depend on this protocol
+/// so storage can change later without touching them.
 protocol ShoppingListRepository: AnyObject {
     /// Every item currently on the shopping list.
     func fetchAll() -> [ShoppingListItem]
 
-    /// Adds a new item to the shopping list.
+    /// Adds a new item.
     func add(_ item: ShoppingListItem)
 
-    /// Replaces an existing shopping list item (matched by `id`) with
-    /// `item` - used to persist a completion toggle or quantity change.
+    /// Replaces the item matching `item.id` - used for toggling completion
+    /// or changing quantity.
     func update(_ item: ShoppingListItem)
 
-    /// Removes the shopping list item with the given `id`, if one exists.
+    /// Removes the item with the given `id`, if it exists.
     func remove(id: UUID)
 }

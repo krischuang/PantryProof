@@ -5,37 +5,22 @@
 
 import Foundation
 
-/// Whether a recipe's required ingredient is covered by what is currently
-/// in the pantry, as decided by comparing a ``RecipeIngredient``'s
-/// required quantity against the matching ``PantryItem``'s on-hand
-/// quantity.
+/// Whether a recipe ingredient is covered by what's currently in the
+/// pantry, based on comparing required quantity vs. on-hand quantity.
 ///
-/// Modelled as four states rather than a `Bool` because "have some, but
-/// not enough" is a materially different situation from "have none at
-/// all" - a cook with 200 g of chicken for a 400 g requirement can decide
-/// to buy 200 g more, whereas a cook with none needs to think about the
-/// ingredient from scratch. Collapsing both into a single "missing" state
-/// would throw away information the recipe detail screen needs to show a
-/// useful "Have / Need" comparison. ``quantityUnverified`` exists for the
-/// same reason: it is a materially different situation from both
-/// ``available`` and ``insufficient``, and collapsing it into either would
-/// mean FridgeFix claiming a certainty about quantity it cannot actually
-/// back up.
+/// Four states instead of a `Bool` because "have some, not enough" is a
+/// different situation from "have none" - the cook can just buy more in
+/// the first case. `quantityUnverified` is its own state too, since
+/// guessing "available" when the units don't even match would be lying.
 enum IngredientAvailability: Equatable, Hashable {
-    /// The pantry holds at least the required quantity, in the same unit
-    /// the recipe specifies.
+    /// Pantry has at least the required quantity, same unit as the recipe.
     case available
-    /// The ingredient is in the pantry, in the same unit the recipe
-    /// specifies, but in a smaller quantity than required.
+    /// In the pantry, same unit, just not enough of it.
     case insufficient
-    /// The ingredient does not appear in the pantry at all.
+    /// Not in the pantry at all.
     case missing
-    /// The ingredient is in the pantry, but in a different
-    /// ``MeasurementUnit`` than the recipe requires, so the quantities
-    /// cannot be safely compared without an unreliable conversion.
-    /// FridgeFix never guesses here - it surfaces the pantry's own
-    /// quantity and asks the cook to judge it themselves rather than
-    /// silently reporting ``available`` or ``insufficient``.
+    /// In the pantry, but in a different unit than the recipe uses, so we
+    /// can't safely compare the two amounts.
     case quantityUnverified
 
     var displayName: String {

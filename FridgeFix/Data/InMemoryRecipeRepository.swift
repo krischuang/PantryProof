@@ -5,15 +5,12 @@
 
 import Foundation
 
-/// Deterministic, offline implementation of ``RecipeRepository``.
+/// Offline implementation of ``RecipeRepository``.
 ///
-/// The four sample recipes are chosen deliberately, not arbitrarily, to
-/// demonstrate every ``RecipeFeasibility`` outcome against
-/// ``InMemoryPantryRepository/sampleItems`` - including the two different
-/// ways a recipe can end up ``RecipeFeasibility/blocked`` (an insufficient
-/// essential ingredient, and a missing replaceable ingredient with no
-/// substitute) so the app never has to be edited by hand to show the full
-/// range of behaviour.
+/// The four sample recipes aren't random - together they hit every
+/// ``RecipeFeasibility`` outcome against
+/// ``InMemoryPantryRepository/sampleItems``, so the app demos its full
+/// behaviour without any manual setup.
 final class InMemoryRecipeRepository: RecipeRepository {
     private let recipes: [Recipe]
 
@@ -29,8 +26,8 @@ final class InMemoryRecipeRepository: RecipeRepository {
 extension InMemoryRecipeRepository {
     static var sampleRecipes: [Recipe] {
         [
-            // All essential/replaceable ingredients fully available; an
-            // optional ingredient is missing but does not block cooking.
+            // Everything essential/replaceable is available - only the
+            // optional ingredient is missing, so it doesn't block cooking.
             Recipe(
                 name: "Chicken Fried Rice",
                 summary: "A quick weeknight stir-fry using pantry staples.",
@@ -42,10 +39,9 @@ extension InMemoryRecipeRepository {
                     RecipeIngredient(ingredient: Ingredient(name: "Spring Onion", category: .produce), quantity: 1, unit: .tablespoons, role: .optional)
                 ]
             ),
-            // Essential Chicken Breast is insufficient (pantry has 400g,
-            // needs 600g) and essential Pasta is missing entirely - neither
-            // has a substitute, so the recipe is blocked even though Cream
-            // (replaceable) has a usable substitute in Milk.
+            // Chicken (essential) is short and Pasta (essential) is
+            // missing, neither has a substitute - blocked, even though
+            // Cream has one (Milk).
             Recipe(
                 name: "Creamy Chicken Pasta",
                 summary: "A rich stovetop pasta with a simple cream sauce.",
@@ -55,9 +51,8 @@ extension InMemoryRecipeRepository {
                     RecipeIngredient(ingredient: Ingredient(name: "Cream", category: .dairy), quantity: 100, unit: .milliliters, role: .replaceable)
                 ]
             ),
-            // Essential Eggs are available; replaceable Parmesan is missing
-            // but has a usable substitute (Cheddar, already in the
-            // pantry), so the recipe can be made with adjustments.
+            // Eggs (essential) are available; Parmesan (replaceable) is
+            // missing but Cheddar covers it - can make with adjustments.
             Recipe(
                 name: "Parmesan Baked Eggs",
                 summary: "Baked eggs with a golden, cheesy crust.",
@@ -67,10 +62,9 @@ extension InMemoryRecipeRepository {
                     RecipeIngredient(ingredient: Ingredient(name: "Chives", category: .produce), quantity: 1, unit: .tablespoons, role: .optional)
                 ]
             ),
-            // Essential Rice is available; replaceable Butter is missing
-            // with no usable substitute (Olive Oil is not in the pantry),
-            // so the recipe is blocked - even though the only other
-            // missing ingredient (Garlic) is merely optional.
+            // Rice (essential) is available; Butter (replaceable) is
+            // missing with no substitute (no Olive Oil in the pantry) -
+            // blocked, even though Garlic is only optional.
             Recipe(
                 name: "Garlic Butter Rice",
                 summary: "Simple buttery rice with garlic.",

@@ -5,15 +5,11 @@
 
 import Foundation
 
-/// A dish the home cook might want to make, expressed as a name, a short
-/// summary, and the list of ingredients it requires.
+/// A dish the cook might want to make: a name, a summary, and the
+/// ingredients it needs.
 ///
-/// `Recipe` is the starting point of FridgeFix's core workflow: the cook
-/// browses recipes, picks one, and asks "can I still make this?". Everything
-/// needed to answer that question - quantities, units, and each
-/// ingredient's ``IngredientRole`` - lives on its ``RecipeIngredient``
-/// entries, keeping `Recipe` itself a simple composition root rather than a
-/// place where evaluation logic could creep in.
+/// Recipe itself stays simple - quantities, units, and role all live on
+/// ``RecipeIngredient`` so evaluation logic doesn't creep in here.
 struct Recipe: Identifiable, Hashable, Codable {
     let id: UUID
     var name: String

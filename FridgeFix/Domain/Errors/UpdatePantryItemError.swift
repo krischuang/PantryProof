@@ -5,12 +5,11 @@
 
 import Foundation
 
-/// The one way updating a pantry item's quantity can fail beyond an
-/// invalid quantity (which reuses ``AddPantryItemError/invalidQuantity``,
-/// since it is exactly the same rule).
+/// The one way updating a pantry item can fail, aside from an invalid
+/// quantity (that reuses ``AddPantryItemError/invalidQuantity`` - same
+/// rule).
 enum UpdatePantryItemError: LocalizedError, Equatable {
-    /// The item was removed (e.g. from another screen) before the update
-    /// could be applied.
+    /// Item was removed elsewhere before the update could apply.
     case itemNotFound
 
     var errorDescription: String? {

@@ -5,13 +5,10 @@
 
 import Foundation
 
-/// Puts a recipe ingredient the pantry cannot cover onto the shopping list,
-/// completing FridgeFix's core workflow: evaluate a recipe, see what's
-/// missing, and act on it in one step from the recipe detail screen.
+/// Adds a recipe ingredient the pantry can't cover to the shopping list.
 ///
-/// The quantity passed in is the recipe's own requirement - not whatever
-/// partial amount the pantry might already hold - so the shopping list
-/// tells the cook exactly how much to buy, not just that they need "some".
+/// Uses the recipe's required quantity, not whatever partial amount the
+/// pantry already has, so the list says exactly how much to buy.
 struct AddMissingIngredientToShoppingListUseCase {
     private let shoppingListRepository: ShoppingListRepository
 
@@ -19,17 +16,12 @@ struct AddMissingIngredientToShoppingListUseCase {
         self.shoppingListRepository = shoppingListRepository
     }
 
-    /// Adds `ingredient` to the shopping list at the given `quantity`/`unit`,
-    /// returning the resulting item.
+    /// Adds `ingredient` to the shopping list, returning the resulting item.
     ///
-    /// **Duplicate rule:** if the ingredient is already on the list and not
-    /// yet ``ShoppingListItem/isCompleted``, that existing entry is
-    /// returned unchanged instead of adding a second row - tapping "Add to
-    /// Shopping List" from a recipe the cook has already flagged should not
-    /// create a growing pile of duplicate entries for the same trip. Once
-    /// an entry is marked completed (bought), it no longer counts as a
-    /// duplicate: the cook has used up that stock and a fresh need for the
-    /// same ingredient is a genuinely new item to buy.
+    /// **Duplicate rule:** if it's already on the list and not yet bought,
+    /// return that entry instead of adding a second one - tapping "Add"
+    /// twice shouldn't create duplicates. Once an item is bought, it
+    /// doesn't count anymore, since a fresh need is a genuinely new item.
     ///
     /// - Throws: ``AddMissingIngredientToShoppingListError/invalidRequiredQuantity``
     ///   if `quantity` is zero or negative.

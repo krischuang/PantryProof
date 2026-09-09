@@ -6,20 +6,19 @@ what I currently have?"
 ## Overview
 
 FridgeFix compares a ``Recipe``'s requirements against the home cook's
-``PantryItem`` inventory and produces a single, deterministic
-``RecipeEvaluation`` - the same evaluation the UI renders, the unit tests
-assert against, and this documentation describes. There is exactly one
-place the feasibility rule is defined (``RecipeEvaluation/feasibility``),
-so the app can never show contradictory guidance.
+``PantryItem`` inventory and produces one ``RecipeEvaluation`` - the same
+evaluation the UI renders, the tests check, and this doc describes. The
+feasibility rule is defined in exactly one place
+(``RecipeEvaluation/feasibility``), so the app can't give contradictory
+advice.
 
-### Identity, not inheritance
+### Ingredient vs. quantity
 
-``Ingredient`` models identity only - a name and a category, nothing else.
-A quantity only exists once an ingredient is placed in context: sitting in
-the pantry (``PantryItem``) or required by a recipe (``RecipeIngredient``).
-Both compose an `Ingredient` rather than subclassing it, because "500 g of
-chicken" is a pairing of an ingredient with an amount, not a kind of
-chicken.
+``Ingredient`` is just identity - a name and a category, no quantity. A
+quantity only exists once you put an ingredient somewhere: in the pantry
+(``PantryItem``) or on a recipe (``RecipeIngredient``). Both of those
+*have an* `Ingredient` rather than subclassing it - "500 g of chicken" is
+an ingredient plus an amount, not a kind of chicken.
 
 ### Role decides how "missing" is handled
 
@@ -27,43 +26,37 @@ Every ``RecipeIngredient`` carries an ``IngredientRole``:
 
 - **essential** - central to the dish. Missing or insufficient blocks the
   recipe unless a substitute is available.
-- **replaceable** - meaningfully changes the dish, but is not central to
-  it. Missing or insufficient blocks the recipe *unless* a substitute is
-  available - a replaceable ingredient the cook can neither buy nor swap
-  out is exactly as blocking as an essential one.
-- **optional** - a garnish or enhancement. Missing or insufficient never
-  blocks the recipe.
+- **replaceable** - changes the dish but isn't the star. Same rule as
+  essential - no substitute means it's just as blocking.
+- **optional** - a garnish or enhancement. Never blocks the recipe.
 
-This distinction is what stops FridgeFix from giving contradictory advice.
-A replaceable ingredient is not automatically "safe to skip" just because
-its role says "replaceable" - it only stays out of the cook's way once a
-real substitute is confirmed to be sitting in the pantry.
+A replaceable ingredient isn't automatically "safe to skip" just because
+it's replaceable - it only stays out of the way once a real substitute is
+actually sitting in the pantry.
 
 ### Availability is four states, not two
 
-``IngredientAvailability`` distinguishes ``IngredientAvailability/missing``
-(not in the pantry at all) from ``IngredientAvailability/insufficient``
-(in the pantry, but not enough of it). A cook with 200 g of chicken for a
-400 g requirement is in a different situation than a cook with none, and
-the recipe detail screen's "Have / Need" comparison depends on keeping
-those states apart. A fourth state, ``IngredientAvailability/quantityUnverified``,
-exists for the same reason: when the pantry and recipe use different
-measurement units, FridgeFix has no reliable way to compare the two
-quantities. Rather than guess - and risk claiming an ingredient is
-``IngredientAvailability/available`` when it might not be - it reports the
-amount as unverified and shows the cook what's actually on hand so they can
-judge for themselves. An unverified essential or replaceable ingredient
-never blocks a recipe outright (its presence is confirmed), but it also
-never lets the recipe read as ready to cook (its quantity is not).
+``IngredientAvailability`` splits ``IngredientAvailability/missing`` (not
+in the pantry) from ``IngredientAvailability/insufficient`` (in the
+pantry, just not enough) - a cook with 200 g of chicken for a 400 g
+requirement is in a different spot than a cook with none, and the recipe
+screen's "Have / Need" comparison needs that distinction. The fourth
+state, ``IngredientAvailability/quantityUnverified``, covers the case
+where the pantry and recipe use different units and the amounts can't be
+safely compared. Rather than guess and risk a wrong "available", FridgeFix
+reports it as unverified and shows the cook what's actually on hand. An
+unverified essential/replaceable ingredient never blocks a recipe outright
+(it's there), but never counts as ready to cook either (the amount's not
+confirmed).
 
 ### One feasibility rule, everywhere
 
-``RecipeEvaluation/feasibility`` derives a single ``RecipeFeasibility`` -
-``RecipeFeasibility/readyToCook``, ``RecipeFeasibility/canMakeWithAdjustments``
-or ``RecipeFeasibility/blocked`` - from the already-evaluated ingredient
-rows. It is a pure computed property with no external dependencies, which
-is what makes it deterministic and directly unit-testable, and why the UI
-never needs (or is able) to recompute the verdict differently.
+``RecipeEvaluation/feasibility`` turns the evaluated ingredient rows into
+one ``RecipeFeasibility`` - ``RecipeFeasibility/readyToCook``,
+``RecipeFeasibility/canMakeWithAdjustments``, or
+``RecipeFeasibility/blocked``. It's a pure computed property with no
+dependencies, which is what makes it easy to test and the same everywhere
+it's used.
 
 ## Topics
 

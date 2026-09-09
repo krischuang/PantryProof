@@ -5,17 +5,12 @@
 
 import Foundation
 
-/// Deterministic, fully offline implementation of ``SubstitutionProviding``.
+/// Offline implementation of ``SubstitutionProviding`` - just a fixed
+/// lookup table, no network calls.
 ///
-/// FridgeFix runs from local data only - no network calls, no AI-generated
-/// suggestions - so the same recipe and pantry always produce the same
-/// substitution guidance. Rules are a small, fixed table of ingredient
-/// name → candidate names, covering the ingredients FridgeFix's sample
-/// recipes actually use. This is intentionally not a general-purpose
-/// recommendation engine: FridgeFix only needs to answer "is there
-/// something in this cook's pantry, right now, that could stand in for
-/// this ingredient?", not "what could stand in for this ingredient in
-/// general?".
+/// Only covers ingredients the sample recipes actually use. Not trying to
+/// be a general substitution engine, just answering "is there something in
+/// this pantry right now that works instead?".
 struct LocalSubstitutionService: SubstitutionProviding {
     private let rulesByIngredientName: [String: [String]] = [
         "greek yogurt": ["plain yogurt", "sour cream"],

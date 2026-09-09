@@ -5,28 +5,18 @@
 
 import Foundation
 
-/// The overall "Can I still make this?" verdict for a recipe, given the
-/// current pantry.
+/// The overall "can I still make this?" verdict for a recipe.
 ///
-/// This is FridgeFix's headline answer, so it is modelled as its own type
-/// rather than left as a combination of booleans the UI would otherwise
-/// have to reconstruct (and could reconstruct inconsistently) itself. Every
-/// screen and every test reads the same ``RecipeEvaluation/feasibility``
-/// value, so the verdict shown to the cook can never contradict the
-/// per-ingredient detail shown alongside it.
+/// One type instead of a pile of booleans, so every screen and test reads
+/// the same verdict and nothing can show contradictory advice.
 enum RecipeFeasibility: Equatable {
-    /// Every ingredient the recipe needs is available in a sufficient
-    /// quantity. Nothing stands between the cook and cooking.
+    /// Everything the recipe needs is available. Nothing stands in the way.
     case readyToCook
-    /// At least one essential or replaceable ingredient is missing or
-    /// insufficient, but every such ingredient either has a substitute
-    /// available in the pantry, or its quantity simply could not be
-    /// verified against the recipe's unit (optional ingredients falling
-    /// short never affect this).
+    /// Something essential/replaceable is missing or short, but there's a
+    /// substitute for it (or its amount just couldn't be checked).
     case canMakeWithAdjustments
-    /// At least one essential or replaceable ingredient is missing or
-    /// insufficient *and has no available substitute*. The recipe cannot
-    /// reasonably proceed as written.
+    /// Something essential/replaceable is missing or short with no
+    /// substitute available. The recipe can't be made as written.
     case blocked
 
     var title: String {

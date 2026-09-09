@@ -50,7 +50,7 @@ final class AddPantryItemUseCaseTests: XCTestCase {
         XCTAssertThrowsError(try useCase.execute(name: "Chicken", quantity: 300, unit: .grams, category: .meat)) { error in
             XCTAssertEqual(error as? AddPantryItemError, .duplicateIngredient(name: "Chicken"))
         }
-        // The original entry must be untouched, not merged or duplicated.
+        // Original entry should be untouched, not merged or duplicated.
         XCTAssertEqual(repository.fetchAll().count, 1)
         XCTAssertEqual(repository.fetchAll().first?.quantity, 200)
     }
