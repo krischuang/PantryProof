@@ -5,18 +5,16 @@
 
 import SwiftUI
 
-/// A form for adding a new pantry item, presented as a sheet from
+/// Form for adding a new pantry item, presented as a sheet from
 /// ``PantryView``.
 ///
-/// This view collects raw input only - every validation and duplicate rule
-/// is enforced by ``AddPantryItemUseCase`` via ``PantryViewModel``, not
-/// here.
+/// Just collects input - validation and duplicate checking happen in
+/// ``AddPantryItemUseCase`` via ``PantryViewModel``.
 struct AddPantryItemView: View {
     @Environment(\.dismiss) private var dismiss
     var viewModel: PantryViewModel
-    /// Called when the cook chooses to edit the existing duplicate item
-    /// instead of adding a new one. The caller is responsible for
-    /// dismissing this sheet and presenting an edit flow.
+    /// Called when the cook wants to edit the existing duplicate instead
+    /// of adding a new one. Caller handles dismissing and presenting edit.
     var onEditExisting: (PantryItem) -> Void
 
     @State private var name: String = ""
@@ -48,12 +46,17 @@ struct AddPantryItemView: View {
                 }
                 if let errorMessage = viewModel.errorMessage {
                     Section {
-                        Text(errorMessage)
-                            .foregroundStyle(.red)
+                        InlineErrorBanner(message: errorMessage)
+                            .listRowInsets(EdgeInsets())
+                            .padding(.vertical, 2)
                         if let duplicateItem = viewModel.duplicateItem {
-                            Button("Update Existing Quantity") {
+                            Button {
                                 onEditExisting(duplicateItem)
+                            } label: {
+                                Label("Update Existing Quantity", systemImage: "arrow.uturn.right.circle")
                             }
+                            .buttonStyle(.bordered)
+                            .tint(.orange)
                         }
                     }
                 }
