@@ -23,6 +23,7 @@ struct RecipeListView: View {
                 RecipeRow(recipe: recipe, feasibility: recipeViewModel.feasibility(for: recipe))
             }
         }
+        .listStyle(.insetGrouped)
         .navigationTitle("Recipes")
         .onAppear {
             recipeViewModel.loadRecipes()
@@ -35,7 +36,7 @@ private struct RecipeRow: View {
     let feasibility: RecipeFeasibility
 
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(recipe.name)
                     .font(.headline)
@@ -43,23 +44,21 @@ private struct RecipeRow: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
+                Label("\(recipe.ingredients.count) ingredient\(recipe.ingredients.count == 1 ? "" : "s")", systemImage: "list.bullet")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
             }
-            Spacer()
-            Label(feasibility.title, systemImage: feasibility.symbolName)
-                .labelStyle(.iconOnly)
+            Spacer(minLength: 8)
+            Image(systemName: feasibility.symbolName)
                 .font(.title3)
-                .foregroundStyle(color(for: feasibility))
+                .foregroundStyle(feasibility.color)
+                .frame(width: 32, height: 32)
+                .background(feasibility.color.opacity(0.12), in: Circle())
+                .accessibilityHidden(true)
         }
+        .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(recipe.name). \(feasibility.title).")
-    }
-
-    private func color(for feasibility: RecipeFeasibility) -> Color {
-        switch feasibility {
-        case .readyToCook: return .green
-        case .canMakeWithAdjustments: return .orange
-        case .blocked: return .red
-        }
     }
 }
 

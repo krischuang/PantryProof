@@ -5,15 +5,12 @@
 
 import SwiftUI
 
-/// FridgeFix's central screen: answers "can I still make this?" for one
-/// recipe by showing the overall verdict alongside exactly why, ingredient
-/// by ingredient.
+/// FridgeFix's central screen: the verdict for one recipe, plus why,
+/// ingredient by ingredient.
 ///
-/// This view renders `recipeViewModel.evaluation` - it does not compare
-/// ingredients or compute feasibility itself. Every rule the cook sees here
-/// (available/insufficient/missing, essential/replaceable/optional,
-/// substitution guidance, the overall verdict) comes from
-/// `EvaluateRecipeFeasibilityUseCase` by way of `RecipeEvaluation`.
+/// Just renders `recipeViewModel.evaluation` - doesn't compute anything
+/// itself. Every rule shown here comes from
+/// `EvaluateRecipeFeasibilityUseCase` via `RecipeEvaluation`.
 struct RecipeDetailView: View {
     let recipe: Recipe
     var recipeViewModel: RecipeViewModel
@@ -26,9 +23,10 @@ struct RecipeDetailView: View {
                     .foregroundStyle(.secondary)
                 if let evaluation = recipeViewModel.evaluation, let guidance = recipeViewModel.feasibilityGuidance {
                     FeasibilityBanner(feasibility: evaluation.feasibility, guidance: guidance)
+                        .listRowInsets(EdgeInsets())
                 } else if let errorMessage = recipeViewModel.errorMessage {
-                    Text(errorMessage)
-                        .foregroundStyle(.red)
+                    InlineErrorBanner(message: errorMessage)
+                        .listRowInsets(EdgeInsets())
                 }
             }
 
@@ -49,6 +47,7 @@ struct RecipeDetailView: View {
                 }
             }
         }
+        .listStyle(.insetGrouped)
         .navigationTitle(recipe.name)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -57,38 +56,29 @@ struct RecipeDetailView: View {
     }
 }
 
-/// The feasibility verdict plus one sentence of recovery guidance, so the
-/// cook always knows not just *what* FridgeFix decided but *what to do
-/// next* - the same principle applied to every error message in the app.
+/// The feasibility verdict plus one line of guidance, so the cook knows
+/// not just what happened but what to do next.
 ///
-/// Purely a rendering of already-decided state: `feasibility` names the
-/// domain verdict and `guidance` is `RecipeViewModel`'s presentation
-/// mapping of it. This view does not filter ingredients, weigh
-/// substitutions, or otherwise re-derive what the verdict means - it only
-/// picks a colour for the verdict it was given.
+/// Purely a rendering of state already decided elsewhere - just picks a
+/// colour for the verdict it's given.
 private struct FeasibilityBanner: View {
     let feasibility: RecipeFeasibility
     let guidance: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             Label(feasibility.title, systemImage: feasibility.symbolName)
                 .font(.headline)
-                .foregroundStyle(color)
+                .foregroundStyle(feasibility.color)
             Text(guidance)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(feasibility.color.opacity(0.12))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Feasibility: \(feasibility.title). \(guidance)")
-    }
-
-    private var color: Color {
-        switch feasibility {
-        case .readyToCook: return .green
-        case .canMakeWithAdjustments: return .orange
-        case .blocked: return .red
-        }
     }
 }
 
@@ -98,34 +88,43 @@ private struct IngredientEvaluationRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Image(systemName: evaluatedIngredient.availability.symbolName)
-                    .foregroundStyle(availabilityColor)
+                    .foregroundStyle(evaluatedIngredient.availability.color)
                     .accessibilityHidden(true)
                 Text(evaluatedIngredient.ingredient.name)
                     .font(.body)
                 Spacer()
-                Text(evaluatedIngredient.role.displayName)
-                    .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(.thinMaterial, in: Capsule())
+                TagBadge(
+                    text: evaluatedIngredient.role.displayName,
+                    systemImage: evaluatedIngredient.role.symbolName,
+                    tint: evaluatedIngredient.role.tint
+                )
             }
 
             requirementLine
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
             if !evaluatedIngredient.substitutions.isEmpty {
-                Text("Substitute with: \(substitutionNames)")
+                Label("Substitute with \(substitutionNames)", systemImage: "arrow.triangle.2.circlepath")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.indigo)
             }
 
             if evaluatedIngredient.availability != .available {
-                Button("Add to Shopping List", action: onAddToShoppingList)
-                    .font(.caption)
+                Button {
+                    onAddToShoppingList()
+                } label: {
+                    Label("Add to Shopping List", systemImage: "cart.badge.plus")
+                        .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .tint(.blue)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
         .accessibilityElement(children: .combine)
     }
 
@@ -134,34 +133,17 @@ private struct IngredientEvaluationRow: View {
         switch evaluatedIngredient.availability {
         case .available:
             Text("Needs \(evaluatedIngredient.recipeIngredient.formattedQuantity) - available")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         case .insufficient:
             Text("You have \(evaluatedIngredient.formattedPantryQuantity ?? "0"), but this recipe needs \(evaluatedIngredient.recipeIngredient.formattedQuantity).")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         case .missing:
             Text("Needs \(evaluatedIngredient.recipeIngredient.formattedQuantity) - not in your pantry.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         case .quantityUnverified:
             Text("You have \(evaluatedIngredient.formattedPantryQuantity ?? "some"), but this recipe measures in \(evaluatedIngredient.recipeIngredient.unit.symbol). Check the amount before cooking.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 
     private var substitutionNames: String {
         evaluatedIngredient.substitutions.map(\.substitute.name).joined(separator: ", ")
-    }
-
-    private var availabilityColor: Color {
-        switch evaluatedIngredient.availability {
-        case .available: return .green
-        case .insufficient: return .orange
-        case .missing: return .red
-        case .quantityUnverified: return .blue
-        }
     }
 }
 

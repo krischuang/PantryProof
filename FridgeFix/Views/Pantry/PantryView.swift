@@ -15,22 +15,27 @@ struct PantryView: View {
     var body: some View {
         Group {
             if viewModel.items.isEmpty {
-                ContentUnavailableView(
-                    "Your Pantry Is Empty",
-                    systemImage: "cabinet",
-                    description: Text("Add ingredients you have on hand so FridgeFix can tell you which recipes are ready to cook.")
-                )
+                ContentUnavailableView {
+                    Label("Your Pantry Is Empty", systemImage: "cabinet")
+                } description: {
+                    Text("Add ingredients you have on hand so FridgeFix can tell you which recipes are ready to cook.")
+                } actions: {
+                    Button {
+                        isPresentingAddItem = true
+                    } label: {
+                        Label("Add Ingredient", systemImage: "plus")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
             } else {
                 List {
                     ForEach(viewModel.items) { item in
                         Button {
                             editingItem = item
                         } label: {
-                            HStack {
-                                Image(systemName: item.ingredient.category.symbolName)
-                                    .foregroundStyle(.tint)
-                                    .accessibilityHidden(true)
-                                VStack(alignment: .leading) {
+                            HStack(spacing: 12) {
+                                IconBadge(systemImage: item.ingredient.category.symbolName, tint: item.ingredient.category.tint)
+                                VStack(alignment: .leading, spacing: 2) {
                                     Text(item.name)
                                         .font(.body)
                                         .foregroundStyle(.primary)
@@ -40,8 +45,11 @@ struct PantryView: View {
                                 }
                                 Spacer()
                                 Text(item.formattedQuantity)
+                                    .font(.callout.weight(.medium))
                                     .foregroundStyle(.secondary)
+                                    .monospacedDigit()
                             }
+                            .padding(.vertical, 2)
                         }
                         .buttonStyle(.plain)
                         .accessibilityElement(children: .combine)
@@ -50,6 +58,7 @@ struct PantryView: View {
                     }
                     .onDelete(perform: removeItems)
                 }
+                .listStyle(.insetGrouped)
             }
         }
         .navigationTitle("Pantry")

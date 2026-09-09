@@ -5,8 +5,8 @@
 
 import SwiftUI
 
-/// Shows what the home cook still needs to buy, with items added directly
-/// from recipe evaluations already pre-filled with the required quantity.
+/// Shows what the cook still needs to buy. Items are usually added from a
+/// recipe evaluation, already filled in with the quantity needed.
 struct ShoppingListView: View {
     var viewModel: ShoppingListViewModel
 
@@ -24,10 +24,11 @@ struct ShoppingListView: View {
                         Button {
                             viewModel.toggleCompletion(of: item)
                         } label: {
-                            HStack {
+                            HStack(spacing: 12) {
                                 Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
+                                    .font(.title3)
                                     .foregroundStyle(item.isCompleted ? .green : .secondary)
-                                VStack(alignment: .leading) {
+                                VStack(alignment: .leading, spacing: 2) {
                                     Text(item.name)
                                         .strikethrough(item.isCompleted)
                                         .foregroundStyle(item.isCompleted ? .secondary : .primary)
@@ -37,6 +38,7 @@ struct ShoppingListView: View {
                                 }
                                 Spacer()
                             }
+                            .padding(.vertical, 2)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("\(item.name), \(item.formattedQuantity)")
@@ -46,6 +48,7 @@ struct ShoppingListView: View {
                     }
                     .onDelete(perform: removeItems)
                 }
+                .listStyle(.insetGrouped)
             }
         }
         .navigationTitle("Shopping List")
