@@ -61,7 +61,7 @@ Local Data
 | --- | --- | --- |
 | `EvaluateRecipeFeasibilityUseCase` | The primary operation: compares a recipe against the pantry, ingredient by ingredient, producing a `RecipeEvaluation`. Pure function of its inputs - deterministic and directly unit-testable. | `EvaluateRecipeFeasibilityError` |
 | `AddPantryItemUseCase` | Validates a new pantry entry (name, quantity) and enforces the duplicate-ingredient rule before it ever reaches storage. | `AddPantryItemError` |
-| `UpdatePantryItemUseCase` | Updates an existing pantry item's quantity - the action `AddPantryItemError.duplicateIngredient`'s message actually points the cook toward. | `AddPantryItemError` / `UpdatePantryItemError` |
+| `UpdatePantryItemUseCase` | Updates an existing pantry item's quantity - the action `AddPantryItemError.duplicateIngredient`'s message actually points the cook toward. | `UpdatePantryItemError` |
 | `RemovePantryItemUseCase` | Removes a pantry item the cook has used up, naming "item no longer exists" as a typed failure instead of a silent repository call. | `RemovePantryItemError` |
 | `AddMissingIngredientToShoppingListUseCase` | Adds a recipe ingredient to the shopping list at the quantity it's given (computed by `RecipeIngredientEvaluation.shoppingListQuantity` - the caller never invents this number), with duplicate prevention that still allows re-adding a completed item. | `AddMissingIngredientToShoppingListError` |
 | `ToggleShoppingListItemUseCase` | Marks a shopping list item bought/unbought, naming the "item no longer exists" failure as a typed error instead of silently no-op'ing. | `ToggleShoppingListItemError` |
@@ -108,7 +108,7 @@ Local Data
 Every domain error is a typed `LocalizedError` enum with a message written for the cook, not a developer - what happened, and what they can do next:
 
 - `AddPantryItemError` - `emptyIngredientName`, `invalidQuantity`, `duplicateIngredient(name:)` (e.g. *"You already have Chicken in your pantry. Update its quantity instead of adding it again."*)
-- `UpdatePantryItemError` - `itemNotFound`
+- `UpdatePantryItemError` - `invalidQuantity`, `itemNotFound`
 - `RemovePantryItemError` - `pantryItemNotFound`
 - `ToggleShoppingListItemError` - `itemNotFound`
 - `RemoveShoppingListItemError` - `itemNotFound`
