@@ -66,7 +66,7 @@ final class PantryViewModelTests: XCTestCase {
 
         viewModel.updateQuantity(for: existing, quantity: -1, unit: .grams)
 
-        XCTAssertEqual(viewModel.errorMessage, AddPantryItemError.invalidQuantity.errorDescription)
+        XCTAssertEqual(viewModel.errorMessage, UpdatePantryItemError.invalidQuantity.errorDescription)
         XCTAssertEqual(viewModel.items.first?.quantity, 200)
     }
 

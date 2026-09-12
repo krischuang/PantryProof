@@ -79,8 +79,8 @@ final class RecipeViewModel {
 
     private func adjustmentGuidance(for evaluation: RecipeEvaluation) -> String {
         let unresolved = evaluation.missingEssential + evaluation.missingReplaceable
-        let substitutable = unresolved.filter { $0.hasSubstitution }.map(\.ingredient.name)
-        let unverified = unresolved.filter { $0.availability == .quantityUnverified && !$0.hasSubstitution }.map(\.ingredient.name)
+        let substitutable = unresolved.filter { $0.hasUsableSubstitution }.map(\.ingredient.name)
+        let unverified = unresolved.filter { $0.availability == .quantityUnverified && !$0.hasUsableSubstitution }.map(\.ingredient.name)
 
         var sentences: [String] = []
         if !substitutable.isEmpty {
@@ -93,7 +93,7 @@ final class RecipeViewModel {
     }
 
     private func blockedGuidance(for evaluation: RecipeEvaluation) -> String {
-        let unresolved = evaluation.missingIngredients.filter { !$0.hasSubstitution && $0.role != .optional }
+        let unresolved = evaluation.missingIngredients.filter { !$0.hasUsableSubstitution && $0.role != .optional }
         let names = unresolved.map(\.ingredient.name)
         return "\(names.joined(separator: ", ")) - no substitute available. Add to your shopping list below."
     }

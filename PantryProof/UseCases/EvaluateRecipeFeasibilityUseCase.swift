@@ -42,16 +42,21 @@ struct EvaluateRecipeFeasibilityUseCase {
                 pantryQuantity: nil,
                 pantryUnit: nil,
                 availability: .missing,
-                substitutions: substitutionProvider.substitutions(for: recipeIngredient.ingredient, availableIn: pantry)
+                substitutions: substitutionProvider.substitutions(for: recipeIngredient, availableIn: pantry)
             )
         }
 
-        let availability = availability(of: pantryItem, comparedTo: recipeIngredient)
+        let availability = IngredientAvailability.comparing(
+            onHand: pantryItem.quantity,
+            unit: pantryItem.unit,
+            required: recipeIngredient.quantity,
+            requiredUnit: recipeIngredient.unit
+        )
         // Only bother looking up a substitute once the ingredient actually
         // falls short - no point checking for something already available.
         let substitutions = availability == .available
             ? []
-            : substitutionProvider.substitutions(for: recipeIngredient.ingredient, availableIn: pantry)
+            : substitutionProvider.substitutions(for: recipeIngredient, availableIn: pantry)
 
         return RecipeIngredientEvaluation(
             recipeIngredient: recipeIngredient,
@@ -60,22 +65,5 @@ struct EvaluateRecipeFeasibilityUseCase {
             availability: availability,
             substitutions: substitutions
         )
-    }
-
-    /// Availability for an ingredient already confirmed to be in the
-    /// pantry:
-    ///
-    /// - quantity >= required -> ``IngredientAvailability/available``
-    /// - quantity < required -> ``IngredientAvailability/insufficient``
-    /// - units differ -> ``IngredientAvailability/quantityUnverified``
-    ///
-    /// No unit conversion - if the recipe wants tablespoons and the pantry
-    /// has grams, we can't safely compare, so we don't guess. Better to
-    /// show "unverified" and let the cook check than get it wrong.
-    private func availability(of pantryItem: PantryItem, comparedTo recipeIngredient: RecipeIngredient) -> IngredientAvailability {
-        guard pantryItem.unit == recipeIngredient.unit else {
-            return .quantityUnverified
-        }
-        return pantryItem.quantity >= recipeIngredient.quantity ? .available : .insufficient
     }
 }

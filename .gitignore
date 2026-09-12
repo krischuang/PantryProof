@@ -27,6 +27,10 @@ Pods/
 
 # macOS
 .DS_Store
+__MACOSX/
+
+# Office lock files (Word/Excel/PowerPoint temp files while a doc is open)
+~$*
 
 # Simulator / test output
 *.xcresult/

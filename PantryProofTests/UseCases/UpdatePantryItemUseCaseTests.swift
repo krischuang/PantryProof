@@ -24,7 +24,7 @@ final class UpdatePantryItemUseCaseTests: XCTestCase {
         let useCase = UpdatePantryItemUseCase(pantryRepository: repository)
 
         XCTAssertThrowsError(try useCase.execute(id: item.id, quantity: -1, unit: .grams)) { error in
-            XCTAssertEqual(error as? AddPantryItemError, .invalidQuantity)
+            XCTAssertEqual(error as? UpdatePantryItemError, .invalidQuantity)
         }
     }
 

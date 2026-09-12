@@ -11,10 +11,15 @@ import XCTest
 /// (covered in `EvaluateRecipeFeasibilityUseCaseTests`). Just checks: given
 /// these rows, what's the verdict?
 final class RecipeEvaluationTests: XCTestCase {
-    private func makeRow(role: IngredientRole, availability: IngredientAvailability, hasSubstitution: Bool = false) -> RecipeIngredientEvaluation {
+    private func makeRow(
+        role: IngredientRole,
+        availability: IngredientAvailability,
+        hasSubstitution: Bool = false,
+        substituteQuantityAvailability: IngredientAvailability = .quantityUnverified
+    ) -> RecipeIngredientEvaluation {
         let ingredient = Ingredient(name: "Test Ingredient")
         let substitutions = hasSubstitution
-            ? [PantrySubstitute(original: ingredient, substitute: Ingredient(name: "Substitute"))]
+            ? [PantrySubstitute(original: ingredient, substitute: Ingredient(name: "Substitute"), quantityAvailability: substituteQuantityAvailability)]
             : []
         return RecipeIngredientEvaluation(
             recipeIngredient: RecipeIngredient(ingredient: ingredient, quantity: 1, unit: .pieces, role: role),
@@ -95,6 +100,35 @@ final class RecipeEvaluationTests: XCTestCase {
         ])
 
         XCTAssertEqual(evaluation.feasibility, .readyToCook)
+    }
+
+    func test_feasibility_isBlocked_whenTheOnlySubstituteIsDemonstrablyInsufficient() {
+        // A substitute that's in the pantry but provably not enough (same
+        // unit, short quantity) must not be treated as a real fix - that
+        // would be false certainty.
+        let evaluation = makeEvaluation([
+            makeRow(role: .essential, availability: .missing, hasSubstitution: true, substituteQuantityAvailability: .insufficient)
+        ])
+
+        XCTAssertEqual(evaluation.feasibility, .blocked)
+    }
+
+    func test_feasibility_isCanMakeWithAdjustments_whenSubstituteIsDemonstrablySufficient() {
+        let evaluation = makeEvaluation([
+            makeRow(role: .essential, availability: .missing, hasSubstitution: true, substituteQuantityAvailability: .available)
+        ])
+
+        XCTAssertEqual(evaluation.feasibility, .canMakeWithAdjustments)
+    }
+
+    func test_feasibility_isCanMakeWithAdjustments_whenSubstituteQuantityCannotBeVerified() {
+        // Can't prove it's enough, but can't rule it out either - that's
+        // still worth trying, unlike a substitute proven insufficient.
+        let evaluation = makeEvaluation([
+            makeRow(role: .essential, availability: .missing, hasSubstitution: true, substituteQuantityAvailability: .quantityUnverified)
+        ])
+
+        XCTAssertEqual(evaluation.feasibility, .canMakeWithAdjustments)
     }
 
     func test_feasibility_prefersBlocked_whenBothUnresolvedAndAdjustableIngredientsExist() {
