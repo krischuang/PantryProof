@@ -74,7 +74,7 @@ Local Data
 **Availability** (`IngredientAvailability`), for an ingredient the recipe requires:
 
 - Pantry quantity ≥ required quantity → **available**
-- Pantry quantity < required quantity, same unit → **insufficient**
+- Pantry quantity < required quantity, same unit → **insufficient** (this includes a pantry row sitting at **zero** - the cook is still tracking the ingredient, just out of it, which is a different fact from it never being logged at all)
 - Ingredient not in the pantry at all → **missing**
 - Pantry and recipe units differ → **quantity unverified**. PantryProof does not attempt unit conversion (out of scope, and an incorrect conversion would be worse than none), and it never silently reports the quantity as sufficient. It surfaces the pantry's own quantity and unit alongside a plain-language explanation ("You have 500 g, but this recipe measures in tbsp. Check the amount before cooking.") so the cook can judge for themselves.
 
@@ -119,9 +119,9 @@ Where an error names a next action, the UI provides it directly: the duplicate-i
 
 ## Testing
 
-78 tests across four areas, all passing via `xcodebuild test`:
+79 tests across four areas, all passing via `xcodebuild test`:
 
-- **`PantryProofTests/UseCases/`** - `EvaluateRecipeFeasibilityUseCaseTests` (20, including substitute-quantity-certainty cases against the real `LocalSubstitutionService`), `AddPantryItemUseCaseTests` (6), `UpdatePantryItemUseCaseTests` (3), `RemovePantryItemUseCaseTests` (2), `AddMissingIngredientToShoppingListUseCaseTests` (6), `ToggleShoppingListItemUseCaseTests` (3), `RemoveShoppingListItemUseCaseTests` (2).
+- **`PantryProofTests/UseCases/`** - `EvaluateRecipeFeasibilityUseCaseTests` (21, including substitute-quantity-certainty cases against the real `LocalSubstitutionService` and the zero-quantity pantry rule), `AddPantryItemUseCaseTests` (6), `UpdatePantryItemUseCaseTests` (3), `RemovePantryItemUseCaseTests` (2), `AddMissingIngredientToShoppingListUseCaseTests` (6), `ToggleShoppingListItemUseCaseTests` (3), `RemoveShoppingListItemUseCaseTests` (2).
 - **`PantryProofTests/Domain/`** - `RecipeEvaluationTests` (11), exercising the feasibility rule directly against hand-built rows - including the quantity-unverified and usable-substitution rules - independent of pantry-matching; `RecipeIngredientEvaluationTests` (5), exercising `shoppingListQuantity` directly.
 - **`PantryProofTests/Services/`** - `LocalSubstitutionServiceTests` (5), verifying a substitute's `quantityAvailability` reflects whether the pantry has *enough* of it, not just whether it's present.
 - **`PantryProofTests/ViewModels/`** - `PantryViewModelTests` (8), `ShoppingListViewModelTests` (5), `RecipeViewModelTests` (2), verifying view models correctly surface use case results/errors, delegate every mutation to a Use Case, and never duplicate business logic.

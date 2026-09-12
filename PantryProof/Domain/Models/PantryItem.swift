@@ -13,6 +13,11 @@ import Foundation
 struct PantryItem: Identifiable, Hashable, Codable {
     let id: UUID
     var ingredient: Ingredient
+    /// Never negative. Zero is a valid, meaningful state: the cook is still
+    /// tracking this ingredient, just out of it right now - that's a
+    /// different fact from the ingredient not being in the pantry at all,
+    /// which is why ``EvaluateRecipeFeasibilityUseCase`` reports a
+    /// zero-quantity match as insufficient rather than missing.
     var quantity: Double
     var unit: MeasurementUnit
 

@@ -66,6 +66,23 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
         XCTAssertEqual(evaluatedChicken?.pantryQuantity, 200)
     }
 
+    func test_evaluateRecipe_marksTrackedZeroQuantityIngredientAsInsufficient() throws {
+        // A pantry row with quantity 0 means the cook is still tracking the
+        // ingredient but has run out - a different fact from the ingredient
+        // not being in the pantry at all, so this must not read as .missing.
+        let chicken = makeIngredient("Chicken")
+        let recipe = makeRecipe(ingredients: [
+            RecipeIngredient(ingredient: chicken, quantity: 400, unit: .grams, role: .essential)
+        ])
+        let pantry = [PantryItem(ingredient: chicken, quantity: 0, unit: .grams)]
+
+        let evaluation = try EvaluateRecipeFeasibilityUseCase().execute(recipe: recipe, pantry: pantry)
+
+        let evaluatedChicken = evaluation.evaluatedIngredients.first
+        XCTAssertEqual(evaluatedChicken?.availability, .insufficient)
+        XCTAssertEqual(evaluatedChicken?.pantryQuantity, 0)
+    }
+
     func test_evaluateRecipe_reportsMissing_whenIngredientIsNotInPantry() throws {
         let chicken = makeIngredient("Chicken")
         let recipe = makeRecipe(ingredients: [
