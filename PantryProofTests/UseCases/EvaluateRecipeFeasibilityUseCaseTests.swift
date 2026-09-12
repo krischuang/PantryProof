@@ -12,8 +12,8 @@ import XCTest
 private struct StubSubstitutionProvider: SubstitutionProviding {
     var substitutionsByIngredientName: [String: [PantrySubstitute]] = [:]
 
-    func substitutions(for ingredient: Ingredient, availableIn pantry: [PantryItem]) -> [PantrySubstitute] {
-        substitutionsByIngredientName[ingredient.name.lowercased()] ?? []
+    func substitutions(for recipeIngredient: RecipeIngredient, availableIn pantry: [PantryItem]) -> [PantrySubstitute] {
+        substitutionsByIngredientName[recipeIngredient.ingredient.name.lowercased()] ?? []
     }
 }
 
@@ -162,6 +162,127 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
             .execute(recipe: recipe, pantry: pantry)
 
         XCTAssertEqual(evaluation.feasibility, .canMakeWithAdjustments)
+    }
+
+    func test_evaluateRecipe_allowsAdjustments_whenEssentialIngredientIsInsufficientButSubstituteAvailable() throws {
+        let cream = makeIngredient("Cream")
+        let milk = makeIngredient("Milk")
+        let recipe = makeRecipe(ingredients: [
+            RecipeIngredient(ingredient: cream, quantity: 100, unit: .milliliters, role: .essential)
+        ])
+        // Cream is in the pantry but short of what the recipe needs - not
+        // missing, just insufficient - and Milk covers it.
+        let pantry = [
+            PantryItem(ingredient: cream, quantity: 30, unit: .milliliters),
+            PantryItem(ingredient: milk, quantity: 500, unit: .milliliters)
+        ]
+        let substitutionProvider = StubSubstitutionProvider(substitutionsByIngredientName: [
+            "cream": [PantrySubstitute(original: cream, substitute: milk)]
+        ])
+
+        let evaluation = try EvaluateRecipeFeasibilityUseCase(substitutionProvider: substitutionProvider)
+            .execute(recipe: recipe, pantry: pantry)
+
+        let evaluatedCream = evaluation.evaluatedIngredients.first
+        XCTAssertEqual(evaluatedCream?.availability, .insufficient)
+        XCTAssertTrue(evaluatedCream?.hasSubstitution == true)
+        // Insufficient, not missing, but the substitute still means this
+        // isn't blocking - same rule as a missing ingredient with a
+        // substitute.
+        XCTAssertEqual(evaluation.feasibility, .canMakeWithAdjustments)
+    }
+
+    // MARK: - Substitute quantity certainty
+
+    func test_evaluateRecipe_allowsAdjustments_whenSubstituteQuantityClearlyCoversRequirement() throws {
+        let cream = makeIngredient("Cream")
+        let milk = makeIngredient("Milk")
+        let recipe = makeRecipe(ingredients: [
+            RecipeIngredient(ingredient: cream, quantity: 100, unit: .milliliters, role: .essential)
+        ])
+        let pantry = [PantryItem(ingredient: milk, quantity: 500, unit: .milliliters)]
+
+        let evaluation = try EvaluateRecipeFeasibilityUseCase(substitutionProvider: LocalSubstitutionService())
+            .execute(recipe: recipe, pantry: pantry)
+
+        let evaluatedCream = evaluation.evaluatedIngredients.first
+        XCTAssertEqual(evaluatedCream?.substitutions.first?.quantityAvailability, .available)
+        XCTAssertTrue(evaluatedCream?.hasUsableSubstitution == true)
+        XCTAssertEqual(evaluation.feasibility, .canMakeWithAdjustments)
+    }
+
+    func test_evaluateRecipe_blocksCooking_whenTheOnlySubstituteInPantryIsClearlyInsufficient() throws {
+        let cream = makeIngredient("Cream")
+        let milk = makeIngredient("Milk")
+        let recipe = makeRecipe(ingredients: [
+            RecipeIngredient(ingredient: cream, quantity: 100, unit: .milliliters, role: .essential)
+        ])
+        // Milk is a valid substitute in principle, but 1 ml doesn't stand
+        // in for 100 ml - existing in the pantry isn't the same as being
+        // enough, so this must not read as a confident fix.
+        let pantry = [PantryItem(ingredient: milk, quantity: 1, unit: .milliliters)]
+
+        let evaluation = try EvaluateRecipeFeasibilityUseCase(substitutionProvider: LocalSubstitutionService())
+            .execute(recipe: recipe, pantry: pantry)
+
+        let evaluatedCream = evaluation.evaluatedIngredients.first
+        XCTAssertEqual(evaluatedCream?.substitutions.first?.quantityAvailability, .insufficient)
+        XCTAssertFalse(evaluatedCream?.hasUsableSubstitution == true)
+        XCTAssertEqual(evaluation.feasibility, .blocked)
+    }
+
+    func test_evaluateRecipe_allowsAdjustments_whenSubstituteQuantityCannotBeSafelyVerified() throws {
+        let cream = makeIngredient("Cream")
+        let milk = makeIngredient("Milk")
+        let recipe = makeRecipe(ingredients: [
+            RecipeIngredient(ingredient: cream, quantity: 100, unit: .milliliters, role: .essential)
+        ])
+        // Milk is on hand, but measured in cups - can't be safely compared
+        // to the recipe's millilitres, so PantryProof doesn't guess either
+        // way; it still counts as worth trying, just unverified.
+        let pantry = [PantryItem(ingredient: milk, quantity: 2, unit: .cups)]
+
+        let evaluation = try EvaluateRecipeFeasibilityUseCase(substitutionProvider: LocalSubstitutionService())
+            .execute(recipe: recipe, pantry: pantry)
+
+        let evaluatedCream = evaluation.evaluatedIngredients.first
+        XCTAssertEqual(evaluatedCream?.substitutions.first?.quantityAvailability, .quantityUnverified)
+        XCTAssertTrue(evaluatedCream?.hasUsableSubstitution == true)
+        XCTAssertEqual(evaluation.feasibility, .canMakeWithAdjustments)
+    }
+
+    func test_evaluateRecipe_blocksCooking_whenEssentialIngredientAndItsSubstituteAreBothMissing() throws {
+        let cream = makeIngredient("Cream")
+        let recipe = makeRecipe(ingredients: [
+            RecipeIngredient(ingredient: cream, quantity: 100, unit: .milliliters, role: .essential)
+        ])
+
+        let evaluation = try EvaluateRecipeFeasibilityUseCase(substitutionProvider: LocalSubstitutionService())
+            .execute(recipe: recipe, pantry: [])
+
+        XCTAssertTrue(evaluation.evaluatedIngredients.first?.substitutions.isEmpty == true)
+        XCTAssertEqual(evaluation.feasibility, .blocked)
+    }
+
+    func test_evaluateRecipe_doesNotBlockCooking_whenOptionalIngredientHasOnlyAnInsufficientSubstitute() throws {
+        let chicken = makeIngredient("Chicken")
+        let cream = makeIngredient("Cream")
+        let milk = makeIngredient("Milk")
+        let recipe = makeRecipe(ingredients: [
+            RecipeIngredient(ingredient: chicken, quantity: 400, unit: .grams, role: .essential),
+            RecipeIngredient(ingredient: cream, quantity: 100, unit: .milliliters, role: .optional)
+        ])
+        let pantry = [
+            PantryItem(ingredient: chicken, quantity: 400, unit: .grams),
+            PantryItem(ingredient: milk, quantity: 1, unit: .milliliters)
+        ]
+
+        let evaluation = try EvaluateRecipeFeasibilityUseCase(substitutionProvider: LocalSubstitutionService())
+            .execute(recipe: recipe, pantry: pantry)
+
+        // Optional ingredients never affect feasibility, regardless of
+        // whether their substitute is sufficient, unverified, or absent.
+        XCTAssertEqual(evaluation.feasibility, .readyToCook)
     }
 
     func test_evaluateRecipe_doesNotBlockCooking_whenOptionalIngredientIsMissing() throws {

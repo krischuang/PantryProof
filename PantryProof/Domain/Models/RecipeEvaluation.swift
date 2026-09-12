@@ -24,11 +24,49 @@ struct RecipeIngredientEvaluation: Identifiable, Hashable {
     var role: IngredientRole { recipeIngredient.role }
     var hasSubstitution: Bool { !substitutions.isEmpty }
 
+    /// True when at least one substitute could plausibly cover this
+    /// ingredient - either provably enough (``IngredientAvailability/available``)
+    /// or not disprovable because the units differ
+    /// (``IngredientAvailability/quantityUnverified``).
+    ///
+    /// A substitute that's demonstrably ``IngredientAvailability/insufficient``
+    /// (same unit, not enough) doesn't count - it exists in the pantry, but
+    /// it can't actually resolve the shortfall, so treating it as a fix
+    /// would be false certainty.
+    var hasUsableSubstitution: Bool {
+        substitutions.contains { $0.quantityAvailability != .insufficient }
+    }
+
     /// "500 g" style formatting of what's on hand, for the "Have / Need"
     /// comparison. `nil` if nothing is on hand.
     var formattedPantryQuantity: String? {
         guard let pantryQuantity, let pantryUnit else { return nil }
         return pantryUnit.formatted(pantryQuantity)
+    }
+
+    /// How much of this ingredient still needs to be bought to fully cover
+    /// the recipe - not just the recipe's full requirement once some is
+    /// already in the pantry.
+    ///
+    /// - ``IngredientAvailability/missing``: the full required quantity -
+    ///   there's nothing on hand to subtract.
+    /// - ``IngredientAvailability/insufficient``: only the shortage
+    ///   (required minus on hand). Same unit is guaranteed here - that's
+    ///   how it got marked insufficient in the first place - so the
+    ///   subtraction is safe, and it's always strictly positive.
+    /// - ``IngredientAvailability/quantityUnverified``: the full required
+    ///   quantity. The units differ, so subtracting would be a guess, and
+    ///   PantryProof doesn't guess at quantities.
+    /// - ``IngredientAvailability/available``: zero - nothing to buy.
+    var shoppingListQuantity: Double {
+        switch availability {
+        case .available:
+            return 0
+        case .missing, .quantityUnverified:
+            return recipeIngredient.quantity
+        case .insufficient:
+            return max(recipeIngredient.quantity - (pantryQuantity ?? 0), 0)
+        }
     }
 }
 
@@ -64,18 +102,20 @@ struct RecipeEvaluation {
     /// The one feasibility rule used everywhere - the UI, the tests, and
     /// this doc all agree on the same cases:
     ///
-    /// - **Essential/replaceable, missing or short, no substitute**:
+    /// - **Essential/replaceable, missing or short, no usable substitute**:
     ///   blocked. No point saying "can make with adjustments" if there's
-    ///   no adjustment to offer.
-    /// - **Essential/replaceable, missing or short, substitute exists**:
-    ///   can make with adjustments.
+    ///   no real adjustment to offer - a substitute that's itself
+    ///   demonstrably insufficient doesn't count (see
+    ///   ``RecipeIngredientEvaluation/hasUsableSubstitution``).
+    /// - **Essential/replaceable, missing or short, usable substitute
+    ///   exists**: can make with adjustments.
     /// - **Essential/replaceable, quantity unverified**: never blocked
     ///   outright (it's in the pantry), but never ready to cook either
     ///   (the amount might be short) - always at least "adjustments".
     /// - **Optional**: never affects the verdict, whatever its state.
     var feasibility: RecipeFeasibility {
-        let hasUnresolvedEssential = missingEssential.contains { $0.availability != .quantityUnverified && !$0.hasSubstitution }
-        let hasUnresolvedReplaceable = missingReplaceable.contains { $0.availability != .quantityUnverified && !$0.hasSubstitution }
+        let hasUnresolvedEssential = missingEssential.contains { $0.availability != .quantityUnverified && !$0.hasUsableSubstitution }
+        let hasUnresolvedReplaceable = missingReplaceable.contains { $0.availability != .quantityUnverified && !$0.hasUsableSubstitution }
         if hasUnresolvedEssential || hasUnresolvedReplaceable {
             return .blocked
         }

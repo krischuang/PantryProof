@@ -40,4 +40,17 @@ enum IngredientAvailability: Equatable, Hashable {
         case .quantityUnverified: return "questionmark.circle.fill"
         }
     }
+
+    /// The one quantity-comparison rule PantryProof applies everywhere -
+    /// pantry stock vs. a recipe requirement, or a substitute's stock vs.
+    /// that same requirement: same unit and enough of it is
+    /// ``available``, same unit and not enough is ``insufficient``, and
+    /// different units are ``quantityUnverified`` rather than a guess.
+    ///
+    /// Never returns ``missing`` - this only makes sense once something is
+    /// already known to be on hand.
+    static func comparing(onHand quantity: Double, unit: MeasurementUnit, required: Double, requiredUnit: MeasurementUnit) -> IngredientAvailability {
+        guard unit == requiredUnit else { return .quantityUnverified }
+        return quantity >= required ? .available : .insufficient
+    }
 }

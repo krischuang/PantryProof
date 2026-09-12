@@ -12,6 +12,7 @@ import SwiftUI
 /// itself. Every rule shown here comes from
 /// `EvaluateRecipeFeasibilityUseCase` via `RecipeEvaluation`.
 struct RecipeDetailView: View {
+    @Environment(\.dismiss) private var dismiss
     let recipe: Recipe
     var recipeViewModel: RecipeViewModel
     var shoppingListViewModel: ShoppingListViewModel
@@ -27,6 +28,13 @@ struct RecipeDetailView: View {
                 } else if let errorMessage = recipeViewModel.errorMessage {
                     InlineErrorBanner(message: errorMessage)
                         .listRowInsets(EdgeInsets())
+                    Button {
+                        dismiss()
+                    } label: {
+                        Label("Back to Recipes", systemImage: "chevron.backward")
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.orange)
                 }
             }
 
@@ -35,10 +43,13 @@ struct RecipeDetailView: View {
                     ForEach(evaluation.evaluatedIngredients) { evaluatedIngredient in
                         IngredientEvaluationRow(
                             evaluatedIngredient: evaluatedIngredient,
+                            isAlreadyOnShoppingList: shoppingListViewModel.items.contains {
+                                !$0.isCompleted && $0.ingredient.matches(evaluatedIngredient.ingredient)
+                            },
                             onAddToShoppingList: {
                                 shoppingListViewModel.addMissingIngredient(
                                     evaluatedIngredient.ingredient,
-                                    quantity: evaluatedIngredient.recipeIngredient.quantity,
+                                    quantity: evaluatedIngredient.shoppingListQuantity,
                                     unit: evaluatedIngredient.recipeIngredient.unit
                                 )
                             }
@@ -84,6 +95,7 @@ private struct FeasibilityBanner: View {
 
 private struct IngredientEvaluationRow: View {
     let evaluatedIngredient: RecipeIngredientEvaluation
+    let isAlreadyOnShoppingList: Bool
     let onAddToShoppingList: () -> Void
 
     var body: some View {
@@ -107,21 +119,27 @@ private struct IngredientEvaluationRow: View {
                 .foregroundStyle(.secondary)
 
             if !evaluatedIngredient.substitutions.isEmpty {
-                Label("Substitute with \(substitutionNames)", systemImage: "arrow.triangle.2.circlepath")
+                Label(substitutionMessage, systemImage: "arrow.triangle.2.circlepath")
                     .font(.caption)
-                    .foregroundStyle(.indigo)
+                    .foregroundStyle(evaluatedIngredient.hasUsableSubstitution ? .indigo : .orange)
             }
 
             if evaluatedIngredient.availability != .available {
-                Button {
-                    onAddToShoppingList()
-                } label: {
-                    Label("Add to Shopping List", systemImage: "cart.badge.plus")
+                if isAlreadyOnShoppingList {
+                    Label("Already on Shopping List", systemImage: "checkmark.circle")
                         .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Button {
+                        onAddToShoppingList()
+                    } label: {
+                        Label("Add to Shopping List", systemImage: "cart.badge.plus")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .tint(.blue)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .tint(.blue)
             }
         }
         .padding(.vertical, 6)
@@ -142,8 +160,23 @@ private struct IngredientEvaluationRow: View {
         }
     }
 
-    private var substitutionNames: String {
-        evaluatedIngredient.substitutions.map(\.substitute.name).joined(separator: ", ")
+    /// Names each substitute honestly instead of implying every listed
+    /// substitute is a sure thing: a name on its own means the pantry has
+    /// enough, "check amount" means the units didn't match so PantryProof
+    /// can't confirm, and "not enough on hand" means the pantry quantity is
+    /// demonstrably short.
+    private var substitutionMessage: String {
+        let names = evaluatedIngredient.substitutions.map { substitute -> String in
+            switch substitute.quantityAvailability {
+            case .available:
+                return substitute.substitute.name
+            case .quantityUnverified:
+                return "\(substitute.substitute.name) (check amount)"
+            case .insufficient, .missing:
+                return "\(substitute.substitute.name) (not enough on hand)"
+            }
+        }
+        return "Substitute with \(names.joined(separator: ", "))"
     }
 }
 

@@ -30,9 +30,9 @@ A recipe app that only lists ingredients forces the cook to manually cross-refer
 - **Recipe browsing** - sample recipes with an at-a-glance feasibility badge.
 - **Quantity-aware evaluation** - compares a recipe's requirement against the pantry by *amount*, not just presence, distinguishing **insufficient** from **missing**, and honestly flagging **unverified** when the pantry and recipe use different units PantryProof cannot safely compare.
 - **Essential / Replaceable / Optional roles** - every recipe ingredient carries a role that changes how a shortfall is treated.
-- **Ingredient substitution** - a deterministic local lookup suggests a pantry-backed substitute where one exists.
+- **Ingredient substitution** - a deterministic local lookup suggests a pantry-backed substitute where one exists, and checks the substitute's own quantity against the same requirement rather than assuming presence means enough.
 - **"Can I still make this?" verdict** - one consistent, contradiction-free `RecipeEvaluation` per recipe.
-- **Shopping list** - add missing/insufficient ingredients directly from a recipe evaluation at the recipe's required quantity, with duplicate prevention and completion tracking.
+- **Shopping list** - add missing/insufficient ingredients directly from a recipe evaluation at exactly the quantity still needed (the full amount if missing, only the shortfall if insufficient), with duplicate prevention and completion tracking.
 
 ## Architecture
 
@@ -63,7 +63,7 @@ Local Data
 | `AddPantryItemUseCase` | Validates a new pantry entry (name, quantity) and enforces the duplicate-ingredient rule before it ever reaches storage. | `AddPantryItemError` |
 | `UpdatePantryItemUseCase` | Updates an existing pantry item's quantity - the action `AddPantryItemError.duplicateIngredient`'s message actually points the cook toward. | `AddPantryItemError` / `UpdatePantryItemError` |
 | `RemovePantryItemUseCase` | Removes a pantry item the cook has used up, naming "item no longer exists" as a typed failure instead of a silent repository call. | `RemovePantryItemError` |
-| `AddMissingIngredientToShoppingListUseCase` | Adds a recipe ingredient to the shopping list at the recipe's own required quantity, with duplicate prevention that still allows re-adding a completed item. | `AddMissingIngredientToShoppingListError` |
+| `AddMissingIngredientToShoppingListUseCase` | Adds a recipe ingredient to the shopping list at the quantity it's given (computed by `RecipeIngredientEvaluation.shoppingListQuantity` - the caller never invents this number), with duplicate prevention that still allows re-adding a completed item. | `AddMissingIngredientToShoppingListError` |
 | `ToggleShoppingListItemUseCase` | Marks a shopping list item bought/unbought, naming the "item no longer exists" failure as a typed error instead of silently no-op'ing. | `ToggleShoppingListItemError` |
 | `RemoveShoppingListItemUseCase` | Removes an item from the shopping list at the cook's request, naming "item no longer exists" as a typed failure. | `RemoveShoppingListItemError` |
 
@@ -78,13 +78,26 @@ Local Data
 - Ingredient not in the pantry at all → **missing**
 - Pantry and recipe units differ → **quantity unverified**. PantryProof does not attempt unit conversion (out of scope, and an incorrect conversion would be worse than none), and it never silently reports the quantity as sufficient. It surfaces the pantry's own quantity and unit alongside a plain-language explanation ("You have 500 g, but this recipe measures in tbsp. Check the amount before cooking.") so the cook can judge for themselves.
 
+**Substitute quantity certainty** (`PantrySubstitute.quantityAvailability`, computed in `LocalSubstitutionService`): a substitute being *in* the pantry is not the same claim as a substitute being *enough* - 1 ml of milk doesn't stand in for 100 ml of cream just because milk is technically present. Every substitute is checked against the original ingredient's required quantity using the same comparison the pantry itself uses:
+
+- Substitute quantity ≥ required quantity, same unit → **available** (a real fix).
+- Substitute quantity < required quantity, same unit → **insufficient** (present, but doesn't help - see `RecipeIngredientEvaluation.hasUsableSubstitution`, which excludes this case).
+- Substitute and recipe units differ → **quantity unverified** (can't be ruled out, but not proven either - no unit conversion is attempted, same rule as pantry-vs-recipe comparison).
+
 **Feasibility** (`RecipeEvaluation.feasibility`), the single rule used everywhere - UI, tests, and this document:
 
-- An **essential or replaceable** ingredient that is missing/insufficient **and has no available substitute** → the recipe is **blocked**. A replaceable ingredient the cook can neither buy nor swap out is exactly as blocking as an essential one.
-- An **essential or replaceable** ingredient that is missing/insufficient **with a substitute available** → **can make with adjustments**.
+- An **essential or replaceable** ingredient that is missing/insufficient **and has no *usable* substitute** → the recipe is **blocked**. A replaceable ingredient the cook can neither buy nor swap out is exactly as blocking as an essential one, and a substitute that's demonstrably insufficient doesn't count as an escape hatch - that would be false certainty.
+- An **essential or replaceable** ingredient that is missing/insufficient **with a usable substitute** (available, or quantity-unverified) → **can make with adjustments**.
 - An **essential or replaceable** ingredient with an **unverified quantity** → never blocks the recipe outright (presence is confirmed), but never results in **ready to cook** either (the amount is not confirmed) - it always downgrades to **can make with adjustments**, regardless of whether a substitute exists.
 - An **optional** ingredient that is missing/insufficient/unverified → never affects feasibility.
 - If *any* ingredient meets the first condition, the recipe is blocked overall, even if another ingredient elsewhere is separately adjustable - PantryProof never reports "can make with adjustments" while something is still genuinely blocking.
+
+**Shopping list quantity** (`RecipeIngredientEvaluation.shoppingListQuantity`): "Add to Shopping List" adds only what's actually still needed, not a blanket re-statement of the recipe's requirement.
+
+- **Missing** entirely → the full required quantity.
+- **Insufficient**, same unit as the recipe (guaranteed, by definition of insufficient) → only the shortage (required minus on hand), which is always strictly positive.
+- **Quantity unverified** (units differ) → the full required quantity - subtracting across units would be a guess, and PantryProof doesn't guess at quantities.
+- **Available** → zero; the UI never offers to add an ingredient that's already covered.
 
 **Pantry duplicates**: adding an ingredient already in the pantry is rejected outright rather than merged or duplicated, so the pantry keeps a "one row per ingredient" invariant. The error explains this and the app provides a direct path to update the existing entry instead.
 
@@ -100,16 +113,17 @@ Every domain error is a typed `LocalizedError` enum with a message written for t
 - `ToggleShoppingListItemError` - `itemNotFound`
 - `RemoveShoppingListItemError` - `itemNotFound`
 - `AddMissingIngredientToShoppingListError` - `invalidRequiredQuantity` (a zero or negative required quantity is not a meaningful shopping list entry)
-- `EvaluateRecipeFeasibilityError` - `recipeHasNoIngredients` (a recipe with no ingredient requirements cannot be meaningfully evaluated)
+- `EvaluateRecipeFeasibilityError` - `recipeHasNoIngredients` (a recipe with no ingredient requirements cannot be meaningfully evaluated); `RecipeDetailView` pairs this message with a direct "Back to Recipes" action instead of leaving the cook stranded on an unusable screen
 
 Where an error names a next action, the UI provides it directly: the duplicate-ingredient error's "update its quantity instead" is backed by a real edit flow (`UpdatePantryItemView`), reachable both by tapping a pantry row and directly from the error itself. `RecipeDetailView`'s feasibility banner carries one sentence of concrete guidance sourced from `RecipeViewModel.feasibilityGuidance`, mapped from the same evaluation shown below it, so the guidance can never contradict the ingredient list. The same principle covers quantity uncertainty: an ingredient PantryProof cannot verify never gets a raw "unit mismatch" message - it gets the pantry's own quantity plus a concrete next step ("check the amount before cooking").
 
 ## Testing
 
-59 tests across three areas, all passing via `xcodebuild test`:
+78 tests across four areas, all passing via `xcodebuild test`:
 
-- **`PantryProofTests/UseCases/`** - `EvaluateRecipeFeasibilityUseCaseTests` (14), `AddPantryItemUseCaseTests` (6), `UpdatePantryItemUseCaseTests` (3), `RemovePantryItemUseCaseTests` (2), `AddMissingIngredientToShoppingListUseCaseTests` (6), `ToggleShoppingListItemUseCaseTests` (3), `RemoveShoppingListItemUseCaseTests` (2).
-- **`PantryProofTests/Domain/`** - `RecipeEvaluationTests` (8), exercising the feasibility rule directly against hand-built rows - including the quantity-unverified rule - independent of pantry-matching.
+- **`PantryProofTests/UseCases/`** - `EvaluateRecipeFeasibilityUseCaseTests` (20, including substitute-quantity-certainty cases against the real `LocalSubstitutionService`), `AddPantryItemUseCaseTests` (6), `UpdatePantryItemUseCaseTests` (3), `RemovePantryItemUseCaseTests` (2), `AddMissingIngredientToShoppingListUseCaseTests` (6), `ToggleShoppingListItemUseCaseTests` (3), `RemoveShoppingListItemUseCaseTests` (2).
+- **`PantryProofTests/Domain/`** - `RecipeEvaluationTests` (11), exercising the feasibility rule directly against hand-built rows - including the quantity-unverified and usable-substitution rules - independent of pantry-matching; `RecipeIngredientEvaluationTests` (5), exercising `shoppingListQuantity` directly.
+- **`PantryProofTests/Services/`** - `LocalSubstitutionServiceTests` (5), verifying a substitute's `quantityAvailability` reflects whether the pantry has *enough* of it, not just whether it's present.
 - **`PantryProofTests/ViewModels/`** - `PantryViewModelTests` (8), `ShoppingListViewModelTests` (5), `RecipeViewModelTests` (2), verifying view models correctly surface use case results/errors, delegate every mutation to a Use Case, and never duplicate business logic.
 
 Test names describe business behaviour (e.g. `test_evaluateRecipe_blocksCooking_whenEssentialIngredientIsMissingWithNoSubstitute`), and every use case has both happy-path and failure-path coverage.
@@ -150,6 +164,7 @@ PantryProof/
 PantryProofTests/
 ├── UseCases/
 ├── Domain/
+├── Services/
 └── ViewModels/
 ```
 
