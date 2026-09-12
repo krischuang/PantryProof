@@ -76,7 +76,7 @@ it's used.
 ### Evaluation
 
 - ``IngredientAvailability``
-- ``IngredientSubstitution``
+- ``PantrySubstitute``
 - ``RecipeIngredientEvaluation``
 - ``RecipeEvaluation``
 - ``RecipeFeasibility``

@@ -18,7 +18,7 @@ struct RecipeIngredientEvaluation: Identifiable, Hashable {
     let availability: IngredientAvailability
     /// Substitutes currently in the pantry. Empty when the ingredient is
     /// already available - no point suggesting a substitute you don't need.
-    let substitutions: [IngredientSubstitution]
+    let substitutions: [PantrySubstitute]
 
     var ingredient: Ingredient { recipeIngredient.ingredient }
     var role: IngredientRole { recipeIngredient.role }

@@ -17,5 +17,5 @@ protocol SubstitutionProviding {
     ///
     /// Implementations should never return a candidate the cook doesn't
     /// have - that's not useful information.
-    func substitutions(for ingredient: Ingredient, availableIn pantry: [PantryItem]) -> [IngredientSubstitution]
+    func substitutions(for ingredient: Ingredient, availableIn pantry: [PantryItem]) -> [PantrySubstitute]
 }

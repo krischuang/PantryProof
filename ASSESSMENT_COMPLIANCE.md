@@ -1,4 +1,4 @@
-# FridgeFix - Assessment Compliance
+# PantryProof - Assessment Compliance
 
 This file maps every requirement of the Assessment 2 brief to concrete
 evidence in this repository. Nothing below is marked PASS without a file,
@@ -10,7 +10,7 @@ test, or documented decision backing it.
 | Domain-centred architecture (Views → ViewModels → Use Cases → Domain/Services → Data) | `FridgeFix/{Views,ViewModels,UseCases,Domain,Services,Data}` folder structure | - | README "Architecture" section; `docs/ARCHITECTURE_DIAGRAM.md` | PASS |
 | ≥3 genuine Use Cases | `EvaluateRecipeFeasibilityUseCase.swift`, `AddPantryItemUseCase.swift`, `AddMissingIngredientToShoppingListUseCase.swift` (required three); `UpdatePantryItemUseCase.swift`, `RemovePantryItemUseCase.swift`, `ToggleShoppingListItemUseCase.swift`, `RemoveShoppingListItemUseCase.swift` (justified optional additions - see "Every Use Case has a typed domain error" below) | 14 + 6 + 3 + 2 + 6 + 3 + 2 = 36 use case tests | README "Use Cases" table | PASS |
 | Every Use Case has a typed domain error, happy-path test, and failure-path test | See the Use Case → Error → Tests table below | See table below | README "Use Cases" table; README "Error and Recovery Design" | PASS |
-| Domain models use semantic, non-vague names | `Ingredient`, `PantryItem`, `Recipe`, `RecipeIngredient`, `IngredientRole`, `IngredientAvailability`, `IngredientSubstitution`, `RecipeEvaluation`, `RecipeFeasibility`, `ShoppingListItem` - no `Item`/`Manager`/`Handler` types | - | DocC comments on every model (`FridgeFix.docc/FridgeFix.md` + inline `///`) | PASS |
+| Domain models use semantic, non-vague names | `Ingredient`, `PantryItem`, `Recipe`, `RecipeIngredient`, `IngredientRole`, `IngredientAvailability`, `PantrySubstitute`, `RecipeEvaluation`, `RecipeFeasibility`, `ShoppingListItem` - no `Item`/`Manager`/`Handler` types | - | DocC comments on every model (`FridgeFix.docc/FridgeFix.md` + inline `///`) | PASS |
 | `struct` for domain records | All 10 domain model files are `struct`; only repositories/services (`InMemoryPantryRepository`, `InMemoryShoppingListRepository`, `InMemoryRecipeRepository`, `LocalSubstitutionService`) and ViewModels are reference types, each for a stated reason (shared mutable storage; SwiftUI observation) | - | README architecture note; inline doc comments | PASS |
 | `IngredientRole` (essential/replaceable/optional) | `Domain/Models/RecipeIngredient.swift` | `RecipeEvaluationTests.test_feasibility_ignoresOptionalIngredients_*` | README "Business Rules" | PASS |
 | `IngredientAvailability` (available/insufficient/missing/quantityUnverified) | `Domain/Models/IngredientAvailability.swift` | `EvaluateRecipeFeasibilityUseCaseTests` (exact/greater/lower quantity, missing, differing units) | README "Business Rules" | PASS |

@@ -1,5 +1,5 @@
 //
-//  IngredientSubstitution.swift
+//  PantrySubstitute.swift
 //  FridgeFix
 //
 
@@ -10,7 +10,7 @@ import Foundation
 /// `substitute` is always something already in the pantry - no point
 /// suggesting a swap that still needs a shopping trip. See
 /// `SubstitutionProviding` for where that check happens.
-struct IngredientSubstitution: Identifiable, Hashable {
+struct PantrySubstitute: Identifiable, Hashable {
     var id: String { "\(original.id)->\(substitute.id)" }
     /// The ingredient this substitution stands in for.
     let original: Ingredient

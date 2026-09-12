@@ -1,14 +1,16 @@
-# FridgeFix - Reflective Report
+# PantryProof - Reflective Report
 
 ## Domain understanding
 
-The single most consequential domain decision in FridgeFix is the three-way
-split between `essential`, `replaceable`, and `optional` ingredient roles,
-and I changed my understanding of it partway through building the
-feasibility rule. My first instinct was that "replaceable" could be treated
-as inherently low-risk - if an ingredient is swappable, a missing one
-shouldn't really block a recipe. That turns out to be wrong, and building
-`RecipeEvaluation.feasibility` is what exposed why: a *replaceable*
+PantryProof answers whether one chosen recipe is feasible with the cook's
+actual pantry, not which recipe to cook - so its most consequential domain
+decision is the three-way split between `essential`, `replaceable`, and
+`optional` ingredient roles, and I changed my understanding of it partway
+through building the feasibility rule. My first instinct was that
+"replaceable" could be treated as inherently low-risk - if an ingredient
+is swappable, a missing one shouldn't really block a recipe. That turns
+out to be wrong, and building `RecipeEvaluation.feasibility` is what
+exposed why: a *replaceable*
 ingredient with no substitute actually sitting in the pantry is exactly as
 blocking as an *essential* one, because "replaceable in principle" and
 "replaceable right now, with what's actually in this pantry" are different
@@ -30,7 +32,7 @@ the cook can judge for themselves. An earlier version of this fallback
 collapsed straight to `available`, which I later corrected once I realised
 it could tell a cook an ingredient was sufficient when it had never
 actually been compared - exactly the kind of false certainty this whole
-design choice was meant to avoid. FridgeFix's stakeholder is a private
+design choice was meant to avoid. PantryProof's stakeholder is a private
 individual, not an institution - but the engineering problem is the same:
 real judgement calls encoded as testable, auditable rules with
 human-facing consequences (see README, "Why This Is a Business Domain,
@@ -56,11 +58,9 @@ crashed with a libmalloc double-free, traced to the Xcode 26 template's
 project-wide `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, which silently
 isolated *every* class in the module to the main actor - including a
 plain in-memory repository that had no business being tied to it at all.
-Removing that default and marking only the ViewModels explicitly
-`@MainActor` fixed the crash and was the
-architecturally correct call: repositories and use cases have no actor
-affinity, and pretending otherwise hid a design smell behind a build
-setting.
+Removing that default and marking only the ViewModels `@MainActor` fixed
+the crash and was correct: repositories and use cases have no actor
+affinity, and a build setting had been hiding that design smell.
 
 ## Human-system design
 
@@ -78,9 +78,9 @@ substitute available" in the next.
 ## What I would do next
 
 The most realistic next step is persistence: `PantryRepository` and
-`ShoppingListRepository` are already abstracted specifically so an
+`ShoppingListRepository` are already abstracted so an
 `InMemoryPantryRepository` could be replaced by a SwiftData-backed one
 without touching a single use case. After that, I'd want a real quantity
-unit-conversion service as its own domain service (not folded into the
-use case), so the "same unit only" limitation can be lifted without
-compromising the honesty of the current fallback.
+unit-conversion service as its own domain service, so the "same unit only"
+limitation can be lifted without compromising the honesty of the current
+fallback.
