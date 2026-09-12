@@ -1,14 +1,14 @@
-# FridgeFix
+# PantryProof
 
-FridgeFix is an offline iOS app that helps a home cook answer one question: **"Can I still make this recipe with what's in my fridge and pantry right now?"**
+PantryProof is an offline iOS app that helps a home cook answer one question: **"Can I still make this recipe with what's in my fridge and pantry right now?"**
 
 ## Project Overview
 
-FridgeFix compares a recipe's ingredient requirements against the home cook's current pantry and gives a single, trustworthy answer - ready to cook, can make with adjustments, or blocked - along with exactly why, ingredient by ingredient. Everything runs locally from in-memory sample data: there is no network layer, no backend, and no AI-generated guidance, so the same recipe and pantry combination always produces the same result.
+PantryProof compares a recipe's ingredient requirements against the home cook's current pantry and gives a single, trustworthy answer - ready to cook, can make with adjustments, or blocked - along with exactly why, ingredient by ingredient. Everything runs locally from in-memory sample data: there is no network layer, no backend, and no AI-generated guidance, so the same recipe and pantry combination always produces the same result. The app answers whether a recipe the cook has already chosen is feasible with what they actually own - it is not a meal recommendation or recipe-ranking system that decides what to cook.
 
 ## Domain Context
 
-A home cook rarely has every ingredient a recipe calls for, and deciding whether that actually matters takes real judgement: running out of the centrepiece protein is not the same situation as running out of a garnish, and "I have some, but maybe not enough" is different again from "I don't have any." FridgeFix encodes that judgement as an explicit, testable set of rules rather than leaving the cook to work it out from a plain ingredient list.
+A home cook rarely has every ingredient a recipe calls for, and deciding whether that actually matters takes real judgement: running out of the centrepiece protein is not the same situation as running out of a garnish, and "I have some, but maybe not enough" is different again from "I don't have any." PantryProof encodes that judgement as an explicit, testable set of rules rather than leaving the cook to work it out from a plain ingredient list.
 
 ## Primary Stakeholder
 
@@ -16,17 +16,17 @@ The home cook deciding, in the moment, whether tonight's recipe is actually achi
 
 ## Why This Is a Business Domain, Not a Demo App
 
-FridgeFix doesn't have an institutional stakeholder the way a hospital ward or claims department does - its business context is grocery-tech and retail: the same category of problem grocery-delivery apps, meal-kit services, and supermarket loyalty platforms build product teams around (Woolworths' shopping list, Instacart's pantry tracking, and HelloFresh's ingredient logic are all commercial products solving a version of this exact problem). What makes an app a *business* application isn't who the stakeholder is, it's how the software is built: every decision here is driven by domain rules with real consequences if they're wrong. A cook who trusts a false "ready to cook" verdict wastes a shopping trip or discovers a missing ingredient mid-recipe; a duplicate-handling bug that silently merges two different pantry quantities corrupts the one piece of state the whole app exists to keep trustworthy. FridgeFix treats those failure modes with the same discipline the brief's regulated-industry examples demand - typed domain errors instead of generic failures, one explicit business-rule model (`RecipeEvaluation.feasibility`) instead of ad hoc booleans scattered across views, and human-facing recovery paths instead of silent failure - because the underlying engineering problem (turn a domain's real judgement calls into testable, auditable rules) is the same one a claims system or medication tracker solves, just at consumer scale instead of institutional scale.
+PantryProof doesn't have an institutional stakeholder the way a hospital ward or claims department does - its business context is grocery-tech and retail: the same category of problem grocery-delivery apps, meal-kit services, and supermarket loyalty platforms build product teams around (Woolworths' shopping list, Instacart's pantry tracking, and HelloFresh's ingredient logic are all commercial products solving a version of this exact problem). What makes an app a *business* application isn't who the stakeholder is, it's how the software is built: every decision here is driven by domain rules with real consequences if they're wrong. A cook who trusts a false "ready to cook" verdict wastes a shopping trip or discovers a missing ingredient mid-recipe; a duplicate-handling bug that silently merges two different pantry quantities corrupts the one piece of state the whole app exists to keep trustworthy. PantryProof treats those failure modes with the same discipline the brief's regulated-industry examples demand - typed domain errors instead of generic failures, one explicit business-rule model (`RecipeEvaluation.feasibility`) instead of ad hoc booleans scattered across views, and human-facing recovery paths instead of silent failure - because the underlying engineering problem (turn a domain's real judgement calls into testable, auditable rules) is the same one a claims system or medication tracker solves, just at consumer scale instead of institutional scale.
 
 ## Problem Statement
 
-A recipe app that only lists ingredients forces the cook to manually cross-reference it against their pantry, guess whether a partial substitute will work, and separately remember to buy what's missing. FridgeFix does that comparison for them, deterministically, and turns "what's missing" directly into shopping-list action.
+A recipe app that only lists ingredients forces the cook to manually cross-reference it against their pantry, guess whether a partial substitute will work, and separately remember to buy what's missing. PantryProof does that comparison for them, deterministically, and turns "what's missing" directly into shopping-list action.
 
 ## Core Features
 
 - **Pantry management** - add, view, and update ingredients on hand (name, quantity, unit, category), with validation and a defined duplicate-handling rule.
 - **Recipe browsing** - sample recipes with an at-a-glance feasibility badge.
-- **Quantity-aware evaluation** - compares a recipe's requirement against the pantry by *amount*, not just presence, distinguishing **insufficient** from **missing**, and honestly flagging **unverified** when the pantry and recipe use different units FridgeFix cannot safely compare.
+- **Quantity-aware evaluation** - compares a recipe's requirement against the pantry by *amount*, not just presence, distinguishing **insufficient** from **missing**, and honestly flagging **unverified** when the pantry and recipe use different units PantryProof cannot safely compare.
 - **Essential / Replaceable / Optional roles** - every recipe ingredient carries a role that changes how a shortfall is treated.
 - **Ingredient substitution** - a deterministic local lookup suggests a pantry-backed substitute where one exists.
 - **"Can I still make this?" verdict** - one consistent, contradiction-free `RecipeEvaluation` per recipe.
@@ -74,7 +74,7 @@ Local Data
 - Pantry quantity ≥ required quantity → **available**
 - Pantry quantity < required quantity, same unit → **insufficient**
 - Ingredient not in the pantry at all → **missing**
-- Pantry and recipe units differ → **quantity unverified**. FridgeFix does not attempt unit conversion (out of scope, and an incorrect conversion would be worse than none), and it never silently reports the quantity as sufficient. It surfaces the pantry's own quantity and unit alongside a plain-language explanation ("You have 500 g, but this recipe measures in tbsp. Check the amount before cooking.") so the cook can judge for themselves.
+- Pantry and recipe units differ → **quantity unverified**. PantryProof does not attempt unit conversion (out of scope, and an incorrect conversion would be worse than none), and it never silently reports the quantity as sufficient. It surfaces the pantry's own quantity and unit alongside a plain-language explanation ("You have 500 g, but this recipe measures in tbsp. Check the amount before cooking.") so the cook can judge for themselves.
 
 **Feasibility** (`RecipeEvaluation.feasibility`), the single rule used everywhere - UI, tests, and this document:
 
@@ -82,7 +82,7 @@ Local Data
 - An **essential or replaceable** ingredient that is missing/insufficient **with a substitute available** → **can make with adjustments**.
 - An **essential or replaceable** ingredient with an **unverified quantity** → never blocks the recipe outright (presence is confirmed), but never results in **ready to cook** either (the amount is not confirmed) - it always downgrades to **can make with adjustments**, regardless of whether a substitute exists.
 - An **optional** ingredient that is missing/insufficient/unverified → never affects feasibility.
-- If *any* ingredient meets the first condition, the recipe is blocked overall, even if another ingredient elsewhere is separately adjustable - FridgeFix never reports "can make with adjustments" while something is still genuinely blocking.
+- If *any* ingredient meets the first condition, the recipe is blocked overall, even if another ingredient elsewhere is separately adjustable - PantryProof never reports "can make with adjustments" while something is still genuinely blocking.
 
 **Pantry duplicates**: adding an ingredient already in the pantry is rejected outright rather than merged or duplicated, so the pantry keeps a "one row per ingredient" invariant. The error explains this and the app provides a direct path to update the existing entry instead.
 
@@ -100,7 +100,7 @@ Every domain error is a typed `LocalizedError` enum with a message written for t
 - `AddMissingIngredientToShoppingListError` - `invalidRequiredQuantity` (a zero or negative required quantity is not a meaningful shopping list entry)
 - `EvaluateRecipeFeasibilityError` - `recipeHasNoIngredients` (a recipe with no ingredient requirements cannot be meaningfully evaluated)
 
-Where an error names a next action, the UI provides it directly: the duplicate-ingredient error's "update its quantity instead" is backed by a real edit flow (`UpdatePantryItemView`), reachable both by tapping a pantry row and directly from the error itself. `RecipeDetailView`'s feasibility banner carries one sentence of concrete guidance sourced from `RecipeViewModel.feasibilityGuidance`, mapped from the same evaluation shown below it, so the guidance can never contradict the ingredient list. The same principle covers quantity uncertainty: an ingredient FridgeFix cannot verify never gets a raw "unit mismatch" message - it gets the pantry's own quantity plus a concrete next step ("check the amount before cooking").
+Where an error names a next action, the UI provides it directly: the duplicate-ingredient error's "update its quantity instead" is backed by a real edit flow (`UpdatePantryItemView`), reachable both by tapping a pantry row and directly from the error itself. `RecipeDetailView`'s feasibility banner carries one sentence of concrete guidance sourced from `RecipeViewModel.feasibilityGuidance`, mapped from the same evaluation shown below it, so the guidance can never contradict the ingredient list. The same principle covers quantity uncertainty: an ingredient PantryProof cannot verify never gets a raw "unit mismatch" message - it gets the pantry's own quantity plus a concrete next step ("check the amount before cooking").
 
 ## Testing
 
@@ -120,7 +120,7 @@ FridgeFix/
 ├── Domain/
 │   ├── Models/              Ingredient, PantryItem, Recipe, RecipeIngredient,
 │   │                        IngredientRole, IngredientAvailability,
-│   │                        IngredientSubstitution, RecipeEvaluation,
+│   │                        PantrySubstitute, RecipeEvaluation,
 │   │                        RecipeFeasibility, ShoppingListItem
 │   ├── Errors/               AddPantryItemError, UpdatePantryItemError,
 │   │                        RemovePantryItemError, ToggleShoppingListItemError,
@@ -158,4 +158,4 @@ FridgeFixTests/
 3. Build and run on an iOS Simulator (iOS 26.1+) or device.
 4. Run the `FridgeFixTests` target (`Cmd+U`) to execute the unit test suite.
 
-No external dependencies, API keys, or network access are required - FridgeFix runs entirely from local sample data.
+No external dependencies, API keys, or network access are required - PantryProof runs entirely from local sample data.

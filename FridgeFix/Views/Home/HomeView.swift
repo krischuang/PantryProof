@@ -64,7 +64,7 @@ struct HomeView: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .navigationTitle("FridgeFix")
+            .navigationTitle("PantryProof")
         }
     }
 

@@ -1,6 +1,6 @@
-# FridgeFix - Human-System Architecture Diagram
+# PantryProof - Human-System Architecture Diagram
 
-This is a one-page view of how FridgeFix is layered, and how a single
+This is a one-page view of how PantryProof is layered, and how a single
 end-to-end interaction - the home cook asking "can I still make this?" -
 crosses that layering from a human action to a human-readable answer.
 
