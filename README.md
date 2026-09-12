@@ -2,6 +2,8 @@
 
 PantryProof is an offline iOS app that helps a home cook answer one question: **"Can I still make this recipe with what's in my fridge and pantry right now?"**
 
+PantryProof builds on the FridgeFix concept developed in Assessment 1, with the product name refined to better reflect its focus on pantry accuracy and recipe feasibility.
+
 ## Project Overview
 
 PantryProof compares a recipe's ingredient requirements against the home cook's current pantry and gives a single, trustworthy answer - ready to cook, can make with adjustments, or blocked - along with exactly why, ingredient by ingredient. Everything runs locally from in-memory sample data: there is no network layer, no backend, and no AI-generated guidance, so the same recipe and pantry combination always produces the same result. The app answers whether a recipe the cook has already chosen is feasible with what they actually own - it is not a meal recommendation or recipe-ranking system that decides what to cook.
@@ -106,17 +108,17 @@ Where an error names a next action, the UI provides it directly: the duplicate-i
 
 59 tests across three areas, all passing via `xcodebuild test`:
 
-- **`FridgeFixTests/UseCases/`** - `EvaluateRecipeFeasibilityUseCaseTests` (14), `AddPantryItemUseCaseTests` (6), `UpdatePantryItemUseCaseTests` (3), `RemovePantryItemUseCaseTests` (2), `AddMissingIngredientToShoppingListUseCaseTests` (6), `ToggleShoppingListItemUseCaseTests` (3), `RemoveShoppingListItemUseCaseTests` (2).
-- **`FridgeFixTests/Domain/`** - `RecipeEvaluationTests` (8), exercising the feasibility rule directly against hand-built rows - including the quantity-unverified rule - independent of pantry-matching.
-- **`FridgeFixTests/ViewModels/`** - `PantryViewModelTests` (8), `ShoppingListViewModelTests` (5), `RecipeViewModelTests` (2), verifying view models correctly surface use case results/errors, delegate every mutation to a Use Case, and never duplicate business logic.
+- **`PantryProofTests/UseCases/`** - `EvaluateRecipeFeasibilityUseCaseTests` (14), `AddPantryItemUseCaseTests` (6), `UpdatePantryItemUseCaseTests` (3), `RemovePantryItemUseCaseTests` (2), `AddMissingIngredientToShoppingListUseCaseTests` (6), `ToggleShoppingListItemUseCaseTests` (3), `RemoveShoppingListItemUseCaseTests` (2).
+- **`PantryProofTests/Domain/`** - `RecipeEvaluationTests` (8), exercising the feasibility rule directly against hand-built rows - including the quantity-unverified rule - independent of pantry-matching.
+- **`PantryProofTests/ViewModels/`** - `PantryViewModelTests` (8), `ShoppingListViewModelTests` (5), `RecipeViewModelTests` (2), verifying view models correctly surface use case results/errors, delegate every mutation to a Use Case, and never duplicate business logic.
 
 Test names describe business behaviour (e.g. `test_evaluateRecipe_blocksCooking_whenEssentialIngredientIsMissingWithNoSubstitute`), and every use case has both happy-path and failure-path coverage.
 
 ## Project Structure
 
 ```text
-FridgeFix/
-├── App/                    FridgeFixApp entry point
+PantryProof/
+├── App/                    PantryProofApp entry point
 ├── Domain/
 │   ├── Models/              Ingredient, PantryItem, Recipe, RecipeIngredient,
 │   │                        IngredientRole, IngredientAvailability,
@@ -143,9 +145,9 @@ FridgeFix/
 │   ├── Recipes/               RecipeListView, RecipeDetailView
 │   └── ShoppingList/          ShoppingListView
 └── Resources/
-    └── FridgeFix.docc/        DocC landing article for the domain layer
+    └── PantryProof.docc/        DocC landing article for the domain layer
 
-FridgeFixTests/
+PantryProofTests/
 ├── UseCases/
 ├── Domain/
 └── ViewModels/
@@ -153,9 +155,9 @@ FridgeFixTests/
 
 ## Setup Instructions
 
-1. Open `FridgeFix.xcodeproj` in Xcode 26 or later.
-2. Select the `FridgeFix` scheme.
+1. Open `PantryProof.xcodeproj` in Xcode 26 or later.
+2. Select the `PantryProof` scheme.
 3. Build and run on an iOS Simulator (iOS 26.1+) or device.
-4. Run the `FridgeFixTests` target (`Cmd+U`) to execute the unit test suite.
+4. Run the `PantryProofTests` target (`Cmd+U`) to execute the unit test suite.
 
 No external dependencies, API keys, or network access are required - PantryProof runs entirely from local sample data.
