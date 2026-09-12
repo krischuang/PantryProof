@@ -4,6 +4,8 @@ PantryProof is an offline iOS app that helps a home cook answer one question: **
 
 PantryProof builds on the FridgeFix concept developed in Assessment 1, with the product name refined to better reflect its focus on pantry accuracy and recipe feasibility.
 
+Full architecture diagram and reflective report: [`docs/PantryProof_Human_System_Architecture.pdf`](docs/PantryProof_Human_System_Architecture.pdf), [`docs/PantryProof_Reflective_Report.pdf`](docs/PantryProof_Reflective_Report.pdf).
+
 ## Project Overview
 
 PantryProof compares a recipe's ingredient requirements against the home cook's current pantry and gives a single, trustworthy answer - ready to cook, can make with adjustments, or blocked - along with exactly why, ingredient by ingredient. Everything runs locally from in-memory sample data: there is no network layer, no backend, and no AI-generated guidance, so the same recipe and pantry combination always produces the same result. The app answers whether a recipe the cook has already chosen is feasible with what they actually own - it is not a meal recommendation or recipe-ranking system that decides what to cook.
