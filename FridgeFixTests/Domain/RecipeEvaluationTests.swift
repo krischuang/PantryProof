@@ -14,7 +14,7 @@ final class RecipeEvaluationTests: XCTestCase {
     private func makeRow(role: IngredientRole, availability: IngredientAvailability, hasSubstitution: Bool = false) -> RecipeIngredientEvaluation {
         let ingredient = Ingredient(name: "Test Ingredient")
         let substitutions = hasSubstitution
-            ? [IngredientSubstitution(original: ingredient, substitute: Ingredient(name: "Substitute"))]
+            ? [PantrySubstitute(original: ingredient, substitute: Ingredient(name: "Substitute"))]
             : []
         return RecipeIngredientEvaluation(
             recipeIngredient: RecipeIngredient(ingredient: ingredient, quantity: 1, unit: .pieces, role: role),

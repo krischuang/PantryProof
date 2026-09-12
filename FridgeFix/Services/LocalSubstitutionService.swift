@@ -21,7 +21,7 @@ struct LocalSubstitutionService: SubstitutionProviding {
         "parmesan": ["cheddar"],
     ]
 
-    func substitutions(for ingredient: Ingredient, availableIn pantry: [PantryItem]) -> [IngredientSubstitution] {
+    func substitutions(for ingredient: Ingredient, availableIn pantry: [PantryItem]) -> [PantrySubstitute] {
         guard let candidateNames = rulesByIngredientName[Self.normalized(ingredient.name)] else {
             return []
         }
@@ -30,7 +30,7 @@ struct LocalSubstitutionService: SubstitutionProviding {
             guard let pantryMatch = pantry.first(where: { $0.ingredient.matches(name: candidateName) }) else {
                 return nil
             }
-            return IngredientSubstitution(original: ingredient, substitute: pantryMatch.ingredient)
+            return PantrySubstitute(original: ingredient, substitute: pantryMatch.ingredient)
         }
     }
 

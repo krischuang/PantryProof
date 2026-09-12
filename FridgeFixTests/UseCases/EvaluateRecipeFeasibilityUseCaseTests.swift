@@ -10,9 +10,9 @@ import XCTest
 /// ingredients have a substitute, without depending on
 /// `LocalSubstitutionService`'s actual rules.
 private struct StubSubstitutionProvider: SubstitutionProviding {
-    var substitutionsByIngredientName: [String: [IngredientSubstitution]] = [:]
+    var substitutionsByIngredientName: [String: [PantrySubstitute]] = [:]
 
-    func substitutions(for ingredient: Ingredient, availableIn pantry: [PantryItem]) -> [IngredientSubstitution] {
+    func substitutions(for ingredient: Ingredient, availableIn pantry: [PantryItem]) -> [PantrySubstitute] {
         substitutionsByIngredientName[ingredient.name.lowercased()] ?? []
     }
 }
@@ -127,7 +127,7 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
         ])
         let pantry = [PantryItem(ingredient: milk, quantity: 500, unit: .milliliters)]
         let substitutionProvider = StubSubstitutionProvider(substitutionsByIngredientName: [
-            "cream": [IngredientSubstitution(original: cream, substitute: milk)]
+            "cream": [PantrySubstitute(original: cream, substitute: milk)]
         ])
 
         let evaluation = try EvaluateRecipeFeasibilityUseCase(substitutionProvider: substitutionProvider)
@@ -155,7 +155,7 @@ final class EvaluateRecipeFeasibilityUseCaseTests: XCTestCase {
         ])
         let pantry = [PantryItem(ingredient: cheddar, quantity: 200, unit: .grams)]
         let substitutionProvider = StubSubstitutionProvider(substitutionsByIngredientName: [
-            "parmesan": [IngredientSubstitution(original: parmesan, substitute: cheddar)]
+            "parmesan": [PantrySubstitute(original: parmesan, substitute: cheddar)]
         ])
 
         let evaluation = try EvaluateRecipeFeasibilityUseCase(substitutionProvider: substitutionProvider)
